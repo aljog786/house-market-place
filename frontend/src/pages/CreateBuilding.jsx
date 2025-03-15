@@ -21,6 +21,7 @@ const CreateBuilding = () => {
 
   const { userInfo } = useSelector((state) => state.auth);
 
+  console.log(userInfo);
   const navigate = useNavigate();
   const [createBuilding, { isLoading }] = useCreateBuildingMutation();
   const [uploadBuildingImage] = useUploadBuildingImageMutation();
@@ -42,7 +43,6 @@ const CreateBuilding = () => {
 try {
     const createdBuilding = {
       name,
-      userRef: userInfo._id,
       type: type ? 'sale' : 'rent',
       rooms: Number(rooms),
       toilets: Number(toilets),
@@ -54,7 +54,7 @@ try {
       discountedPrice: offer ? Number(discountedPrice) : 0,
       imageUrls: [image]
     };
-    console.log("frontend data",createdBuilding);
+    console.log(createdBuilding);
     // Send Building data to backend
     await createBuilding(createdBuilding).unwrap();
     toast.success('Building created successfully');

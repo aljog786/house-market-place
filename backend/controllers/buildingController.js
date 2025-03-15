@@ -24,7 +24,12 @@ export const getBuildingById = asyncHandler(async (req, res) => {
 export const createBuilding = asyncHandler(async (req, res) => {
     const { name, type, rooms, toilets, parking, furnished, offer, regularPrice, discountedPrice, address, imageUrls } = req.body;
 
-    console.log("received data",req.body);
+    console.log( req.body);
+
+    if (!imageUrls || imageUrls.length === 0) {
+        res.status(400);
+        throw new Error("At least one image is required");
+    }
 
     const building = new Building({
         userRef: req.user._id,
