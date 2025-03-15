@@ -1,0 +1,18 @@
+.navbar {
+    font-size: 14px;
+  }
+  
+  .nav-item {
+    flex: 1;
+    color: #6c757d;
+    cursor: pointer;
+  }
+  
+  .nav-item p {
+    margin: 0;
+    font-size: 12px;
+  }
+  
+  .border-top {
+    border-top: 1px solid #e0e0e0;
+  }

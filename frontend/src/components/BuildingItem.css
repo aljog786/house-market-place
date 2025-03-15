@@ -1,0 +1,21 @@
+.building-image {
+    height: 200px;
+    object-fit: cover;
+  }
+  
+  .card-title {
+    font-size: 1.1rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  
+  .text-muted {
+    font-size: 0.9rem;
+  }
+  
+  .text-success {
+    font-size: 1.1rem;
+    font-weight: bold;
+  }
+  
