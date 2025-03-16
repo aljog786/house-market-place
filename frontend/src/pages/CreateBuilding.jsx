@@ -58,7 +58,7 @@ try {
     // Send Building data to backend
     await createBuilding(createdBuilding).unwrap();
     toast.success('Building created successfully');
-    navigate('/buildings');
+    navigate('/');
 } catch (err) {
     toast.error(err?.data?.message || err.message || 'Failed to create building');
 }

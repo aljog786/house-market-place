@@ -30,8 +30,8 @@ app.use('/buildings', buildingRoutes);
 app.use('/users', userRoutes);
 app.use('/upload', uploadRoutes);
 
-const __dirname = path.resolve(); //set __dirname to current directory
-app.use('/uploads',express.static(path.join(__dirname,'/uploads')));
+const __dirname = path.resolve();
+app.use('/uploads', express.static(path.join(__dirname, '/uploads')));
 
 if (process.env.NODE_ENV === 'production') {
     // set static folder
