@@ -38,7 +38,7 @@ const upload = multer({ storage, fileFilter });
   
       res.status(200).send({
         message: 'Image uploaded successfully',
-        image: `/${req.file.path.replace(/\\/g, '/')}`,
+        image: `${req.protocol}://${req.get('host')}/uploads/${req.file.filename}`,
       });
     });
   });
