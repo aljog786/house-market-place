@@ -18,6 +18,8 @@ import Register from './pages/Register';
 import PrivateRoute from './components/PrivateRoute';
 import AdminRoute from './components/AdminRoute';
 import CreateBuilding from './pages/CreateBuilding';
+import BuildingDetails  from './pages/BuildingDetails';
+
 import './index.css';
 import 'bootstrap/dist/css/bootstrap.min.css';
 
@@ -29,6 +31,8 @@ const router = createBrowserRouter(
       <Route path="/offers" element={<Offers />} />
       <Route path="/login" element={<SignIn />} />
       <Route path="/register" element={<Register />} />
+      <Route path="/building-details/:id" element={<BuildingDetails />} />
+
 
       <Route element={<PrivateRoute />}>
         <Route path="/profile/:id" element={<Profile />} />

@@ -1,5 +1,3 @@
-// house-marketplace\frontend\src\components\BuildingItem.jsx
-
 import { Link } from "react-router-dom";
 import { Card, Row, Col } from "react-bootstrap";
 import { FaBed, FaBath } from "react-icons/fa";
@@ -9,7 +7,7 @@ const BuildingItem = ({ building, id }) => {
   return (
     <Col xs={12} sm={6} md={4} lg={3} className="mb-4">
       <Card className="h-100 shadow-sm">
-        <Link to={`/category/${building.type}/${id}`}>
+        <Link to={`/building-details/${id}`}>
           <Card.Img
             variant="top"
             src={building.imageUrls[0]}

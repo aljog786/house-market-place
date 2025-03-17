@@ -1,4 +1,3 @@
-
 import { Container, Row, Col, Card } from 'react-bootstrap';
 import { Link } from 'react-router-dom';
 import rentCategoryImage from '../assets/jpg/rentCategoryImage.jpg';
