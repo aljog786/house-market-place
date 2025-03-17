@@ -56,7 +56,7 @@ const Profile = () => {
               <GoHomeFill size={23} className="text-dark" />
             </Col>
             <Col xs={6}>
-              <p className="fw-bold">Sell or rent your home</p>
+              <p className="fw-bold">Sell / Rent</p>
             </Col>
             <Col className='text-center'>
               <FaCircleChevronRight size={23} className="text-dark" />
