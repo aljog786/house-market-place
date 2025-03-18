@@ -8,12 +8,30 @@ import { GoHomeFill } from "react-icons/go";
 import { MdFavorite } from "react-icons/md";
 import { logout } from '../slices/authSlice';
 import { useState, useEffect } from 'react';
+import axios from 'axios';
 
 const Profile = () => {
+  const [buildings, setBuildings] = useState([]);
+  const [windowWidth, setWindowWidth] = useState(window.innerWidth);
   const { userInfo } = useSelector((state) => state.auth);
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const [windowWidth, setWindowWidth] = useState(window.innerWidth);
+
+  useEffect(() => {
+    if (!userInfo) return;
+    const fetchBuildings = async () => {
+      try {
+        const response = await axios.get("http://localhost:8000/buildings");
+        const filteredBuildings = response.data.filter(
+          (building) => building.userRef._id === userInfo._id
+        );
+        setBuildings(filteredBuildings);
+      } catch (error) {
+        console.error("Error fetching buildings:", error);
+      }
+    };
+    fetchBuildings();
+  }, [userInfo]);
   
   useEffect(() => {
     const handleResize = () => setWindowWidth(window.innerWidth);
@@ -124,7 +142,7 @@ const Profile = () => {
 
                   <div className="d-flex flex-wrap gap-2 mt-4">
                     <div className="stat-box bg-primary bg-opacity-10 text-primary p-3 rounded flex-grow-1 text-center">
-                      <h3 className="mb-1">5</h3>
+                      <h3 className="mb-1">{buildings.length}</h3>
                       <small>Properties</small>
                     </div>
                     <div className="stat-box bg-success bg-opacity-10 text-success p-3 rounded flex-grow-1 text-center">
