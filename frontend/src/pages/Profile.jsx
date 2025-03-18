@@ -3,8 +3,9 @@ import { useSelector, useDispatch } from 'react-redux';
 import { Link, useNavigate } from 'react-router-dom';
 import { FaPowerOff, FaUserEdit } from "react-icons/fa";
 import { FaCartShopping, FaCircleChevronRight } from "react-icons/fa6";
+import { MdOutlineAddHomeWork } from "react-icons/md";
 import { GoHomeFill } from "react-icons/go";
-import { MdFavorite, MdHistory } from "react-icons/md";
+import { MdFavorite } from "react-icons/md";
 import { logout } from '../slices/authSlice';
 import { useState, useEffect } from 'react';
 
@@ -33,7 +34,7 @@ const Profile = () => {
   const menuItems = [
     { 
       title: 'Sell / Rent Property', 
-      icon: <GoHomeFill size={23} className="text-primary" />, 
+      icon: <MdOutlineAddHomeWork size={23} className="text-primary" />, 
       path: '/profile/create-building',
       badge: 'New'
     },
@@ -43,9 +44,9 @@ const Profile = () => {
       path: '/profile/favorites' 
     },
     { 
-      title: 'Browsing History', 
-      icon: <MdHistory size={23} className="text-secondary" />, 
-      path: '/profile/history' 
+      title: 'My Properties', 
+      icon: <GoHomeFill size={23} className="text-secondary" />, 
+      path: '/profile/properties' 
     }
   ];
 

@@ -1,269 +1,329 @@
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import { toast } from 'react-toastify';
-import { Button, Form, Col, Row, Container, ToggleButtonGroup, ToggleButton } from 'react-bootstrap';
-import { useCreateBuildingMutation,useUploadBuildingImageMutation } from '../slices/buildingsApiSlice';
+import { 
+  Button, 
+  Form, 
+  Col, 
+  Row, 
+  Container, 
+  ToggleButton, 
+  FloatingLabel,
+  Card,
+  ProgressBar,
+  Stack
+} from 'react-bootstrap';
+import { FaUpload, FaRegImages, FaMoneyBillWave, FaMapMarkerAlt } from 'react-icons/fa';
+import { useCreateBuildingMutation, useUploadBuildingImageMutation } from '../slices/buildingsApiSlice';
 
 const CreateBuilding = () => {
-
-  const [type, setType] = useState(true);
-  const [name, setName] = useState('');
-  const [rooms, setRooms] = useState('0');
-  const [toilets, setToilets] = useState('0');
-  const [parking, setParking] = useState(true);
-  const [furnished, setFurnished] = useState(true);
-  const [address, setAddress] = useState('');
-  const [regularPrice, setRegularPrice] = useState('0');
-  const [offer, setOffer] = useState(false);
-  const [discountedPrice, setDiscountedPrice] = useState('');
-  const [image, setImage] = useState('');
+  const [formData, setFormData] = useState({
+    type: 'sale',
+    name: '',
+    rooms: 1,
+    toilets: 1,
+    parking: true,
+    furnished: true,
+    address: '',
+    regularPrice: '',
+    offer: false,
+    discountedPrice: '',
+  });
+  const [images, setImages] = useState([]);
+  const [uploadProgress, setUploadProgress] = useState(0);
 
   const { userInfo } = useSelector((state) => state.auth);
-
-  console.log(userInfo);
   const navigate = useNavigate();
   const [createBuilding, { isLoading }] = useCreateBuildingMutation();
   const [uploadBuildingImage] = useUploadBuildingImageMutation();
 
+  const handleInputChange = useCallback((field, value) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
+  }, []);
+
   const uploadImageHandler = async (e) => {
-    const formData = new FormData();
-        formData.append('image', e.target.files[0]);
-        try {
-            const res = await uploadBuildingImage(formData).unwrap();
-            toast.success('Image added');
-            setImage(res.image);
-        } catch (err) {
-            toast.error(err?.data?.message || err.message);
-        }
+    const files = Array.from(e.target.files);
+    if (files.length + images.length > 3) {
+      toast.error('Maximum 3 images allowed');
+      return;
+    }
+
+    try {
+      const uploadPromises = files.map(async (file) => {
+        const formData = new FormData();
+        formData.append('image', file);
+        
+        const res = await uploadBuildingImage(formData).unwrap();
+        return res.image;
+      });
+
+      const uploadedImages = await Promise.all(uploadPromises);
+      setImages(prev => [...prev, ...uploadedImages]);
+      toast.success('Images uploaded successfully');
+    } catch (err) {
+      toast.error(err?.data?.message || err.error || 'Image upload failed');
+    }
+  };
+
+  const removeImage = (index) => {
+    setImages(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const validateForm = () => {
+    if (images.length === 0) return 'At least one image is required';
+    if (formData.offer && formData.discountedPrice >= formData.regularPrice) {
+      return 'Discounted price must be less than regular price';
+    }
+    return null;
   };
 
   const submitHandler = async (e) => {
     e.preventDefault();
-try {
-    const createdBuilding = {
-      name,
-      type: type ? 'sale' : 'rent',
-      rooms: Number(rooms),
-      toilets: Number(toilets),
-      parking,
-      furnished,
-      address,
-      regularPrice: Number(regularPrice),
-      offer,
-      discountedPrice: offer ? Number(discountedPrice) : 0,
-      imageUrls: [image]
-    };
-    console.log(createdBuilding);
-    // Send Building data to backend
-    await createBuilding(createdBuilding).unwrap();
-    toast.success('Building created successfully');
-    navigate('/');
-} catch (err) {
-    toast.error(err?.data?.message || err.message || 'Failed to create building');
-}
-};
+    const validationError = validateForm();
+    if (validationError) return toast.error(validationError);
+
+    try {
+      await createBuilding({
+        ...formData,
+        imageUrls: images,
+        regularPrice: Number(formData.regularPrice),
+        discountedPrice: formData.offer ? Number(formData.discountedPrice) : 0,
+      }).unwrap();
+      
+      toast.success('Building created successfully');
+      navigate('/');
+    } catch (err) {
+      toast.error(err?.data?.message || 'Failed to create building');
+    }
+  };
 
   return (
-    <Container className='mb-5'>
-      <h2 className="mt-4 mb-4" style={{ fontWeight: 'bold' }}>Create a Building</h2>
-      <Form onSubmit={submitHandler}>
-        <Form.Group as={Row} className="mb-3">
-          <Form.Label column sm="3">Sell / Rent</Form.Label>
-          <Col sm="9">
-            <ToggleButtonGroup type="radio" name="type" defaultValue={type} className="d-flex">
-              <ToggleButton
-                variant={type ? 'success' : 'outline-success'}
-                id="type-sale"
-                value={true}
-                onChange={(e) => setType(true)}
-              >
-                Sell
-              </ToggleButton>
-              <ToggleButton
-                variant={!type ? 'success' : 'outline-success'}
-                id="type-rent"
-                value={false}
-                onChange={(e) => setType(false)}
-              >
-                Rent
-              </ToggleButton>
-            </ToggleButtonGroup>
-          </Col>
-        </Form.Group>
+    <Container className="py-5">
+      <Row className="justify-content-center">
+        <Col xl={9} lg={10} md={12}>
+          <Card className="shadow-lg">
+            <Card.Body className="p-4">
+              <h2 className="text-center mb-4 fw-bold text-success">
+                List New Property
+              </h2>
+              
+              <Form onSubmit={submitHandler}>
+                {/* Type Toggle */}
+                <Form.Group className="mb-4">
+                  <Form.Label className="fw-bold">Transaction Type</Form.Label>
+                  <div className="d-grid gap-2 d-md-flex">
+                    <ToggleButton
+                      type="radio"
+                      variant="outline-success"
+                      id="type-sale"
+                      value="sale"
+                      checked={formData.type === 'sale'}
+                      onChange={() => handleInputChange('type', 'sale')}
+                    >
+                      For Sale
+                    </ToggleButton>
+                    <ToggleButton
+                      type="radio"
+                      variant="outline-success"
+                      id="type-rent"
+                      value="rent"
+                      checked={formData.type === 'rent'}
+                      onChange={() => handleInputChange('type', 'rent')}
+                    >
+                      For Rent
+                    </ToggleButton>
+                  </div>
+                </Form.Group>
 
-        <Form.Group className="mb-3">
-          <Form.Label>Name</Form.Label>
-          <Form.Control
-            type="text"
-            id="name"
-            value={name}
-            maxLength="32"
-            minLength="6"
-            required
-            onChange={(e) => setName(e.target.value)}
-          />
-        </Form.Group>
+                {/* Property Details */}
+                <Row className="g-3 mb-4">
+                  <Col md={6}>
+                    <FloatingLabel label="Property Name">
+                      <Form.Control
+                        type="text"
+                        value={formData.name}
+                        onChange={(e) => handleInputChange('name', e.target.value)}
+                        required
+                        placeholder="Property Name"
+                      />
+                    </FloatingLabel>
+                  </Col>
+                  <Col md={6}>
+                    <FloatingLabel label={`${formData.type === 'rent' ? 'Monthly' : ''} Price (₹)`}>
+                      <Form.Control
+                        type="number"
+                        value={formData.regularPrice}
+                        onChange={(e) => handleInputChange('regularPrice', e.target.value)}
+                        min="1"
+                        required
+                        placeholder="Price"
+                      />
+                    </FloatingLabel>
+                  </Col>
+                </Row>
 
-        <Row>
-          <Col>
-            <Form.Group className="mb-3">
-              <Form.Label>Bedrooms</Form.Label>
-              <Form.Control
-                type="number"
-                id="rooms"
-                value={rooms}
-                min="1"
-                max="50"
-                required
-            onChange={(e) => setRooms(e.target.value)}
-              />
-            </Form.Group>
-          </Col>
-          <Col>
-            <Form.Group className="mb-3">
-              <Form.Label>Toilets</Form.Label>
-              <Form.Control
-                type="number"
-                id="toilets"
-                value={toilets}
-                onChange={(e) => setToilets(e.target.value)}
-                min="1"
-                required
-              />
-            </Form.Group>
-          </Col>
-        </Row>
+                {/* Specifications */}
+                <Row className="g-3 mb-4">
+                  <Col md={4}>
+                    <FloatingLabel label="Bedrooms">
+                      <Form.Control
+                        type="number"
+                        value={formData.rooms}
+                        onChange={(e) => handleInputChange('rooms', e.target.value)}
+                        min="1"
+                        required
+                      />
+                    </FloatingLabel>
+                  </Col>
+                  <Col md={4}>
+                    <FloatingLabel label="Bathrooms">
+                      <Form.Control
+                        type="number"
+                        value={formData.toilets}
+                        onChange={(e) => handleInputChange('toilets', e.target.value)}
+                        min="1"
+                        required
+                      />
+                    </FloatingLabel>
+                  </Col>
+                  <Col md={4}>
+                    <FloatingLabel label="Address">
+                      <Form.Control
+                        type="text"
+                        value={formData.address}
+                        onChange={(e) => handleInputChange('address', e.target.value)}
+                        required
+                      />
+                    </FloatingLabel>
+                  </Col>
+                </Row>
 
+                {/* Amenities */}
+                <Row className="g-3 mb-4">
+                  <Col md={6}>
+                    <Form.Group>
+                      <Form.Label className="fw-bold">Amenities</Form.Label>
+                      <Stack gap={2}>
+                        <Form.Check 
+                          type="switch"
+                          label="Parking Available"
+                          checked={formData.parking}
+                          onChange={(e) => handleInputChange('parking', e.target.checked)}
+                        />
+                        <Form.Check 
+                          type="switch"
+                          label="Fully Furnished"
+                          checked={formData.furnished}
+                          onChange={(e) => handleInputChange('furnished', e.target.checked)}
+                        />
+                      </Stack>
+                    </Form.Group>
+                  </Col>
+                  <Col md={6}>
+                    <Form.Group>
+                      <Form.Label className="fw-bold">Special Offer</Form.Label>
+                      <Stack gap={2}>
+                        <Form.Check 
+                          type="switch"
+                          label="Enable Discount"
+                          checked={formData.offer}
+                          onChange={(e) => handleInputChange('offer', e.target.checked)}
+                        />
+                        {formData.offer && (
+                          <FloatingLabel label="Discounted Price ($)">
+                            <Form.Control
+                              type="number"
+                              value={formData.discountedPrice}
+                              onChange={(e) => handleInputChange('discountedPrice', e.target.value)}
+                              min="1"
+                              required={formData.offer}
+                            />
+                          </FloatingLabel>
+                        )}
+                      </Stack>
+                    </Form.Group>
+                  </Col>
+                </Row>
 
+                {/* Image Upload */}
+                <Form.Group className="mb-4">
+                  <Form.Label className="fw-bold d-block">Property Images</Form.Label>
+                  <Form.Text className="d-block mb-2">Upload up to 3 images (JPEG/PNG)</Form.Text>
+                  
+                  <div className="border rounded-3 p-3 bg-light">
+                    <Row className="g-3">
+                      {images.map((img, index) => (
+                        <Col key={index} xs={6} md={4}>
+                          <Card className="h-100">
+                            <Card.Img variant="top" src={img} />
+                            <Button
+                              variant="danger"
+                              size="sm"
+                              className="position-absolute top-0 end-0 m-1"
+                              onClick={() => removeImage(index)}
+                            >
+                              ×
+                            </Button>
+                          </Card>
+                        </Col>
+                      ))}
+                      
+                      {images.length < 3 && (
+                        <Col xs={6} md={4}>
+                          <label 
+                            htmlFor="image-upload" 
+                            className="d-flex align-items-center justify-content-center h-100 cursor-pointer"
+                            style={{ 
+                              minHeight: '100px',
+                              border: '2px dashed #dee2e6',
+                              borderRadius: '0.375rem'
+                            }}
+                          >
+                            <div className="text-center">
+                              <FaUpload className="fs-4 mb-2 text-muted" />
+                              <div className="text-muted small">Click to upload</div>
+                            </div>
+                          </label>
+                          <Form.Control
+                            type="file"
+                            id="image-upload"
+                            onChange={uploadImageHandler}
+                            accept="image/*"
+                            multiple
+                            hidden
+                          />
+                        </Col>
+                      )}
+                    </Row>
+                    
+                    {uploadProgress > 0 && (
+                      <ProgressBar 
+                        now={uploadProgress} 
+                        label={`${uploadProgress}%`} 
+                        className="mt-3"
+                      />
+                    )}
+                  </div>
+                </Form.Group>
 
-        <Form.Group as={Row} className="mb-3">
-          <Form.Label column sm="3">Parking Spot</Form.Label>
-          <Col sm="9">
-            <ToggleButtonGroup type="radio" name="parking" defaultValue={parking} className="d-flex">
-              <ToggleButton
-                variant={parking ? 'success' : 'outline-success'}
-                id="parking-yes"
-                value={true}
-                onChange={(e) => setParking(true)}
-              >
-                Yes
-              </ToggleButton>
-              <ToggleButton
-                variant={!parking ? 'success' : 'outline-success'}
-                id="parking-no"
-                value={false}
-                onChange={(e) => setParking(false)}
-              >
-                No
-              </ToggleButton>
-            </ToggleButtonGroup>
-          </Col>
-        </Form.Group>
-
-        <Form.Group as={Row} className="mb-3">
-          <Form.Label column sm="3">Furnished</Form.Label>
-          <Col sm="9">
-            <ToggleButtonGroup type="radio" name="furnished" defaultValue={furnished} className="d-flex">
-              <ToggleButton
-                variant={furnished ? 'success' : 'outline-success'}
-                id="furnished-yes"
-                value={true}
-                onChange={(e) => setFurnished(true)}
-              >
-                Yes
-              </ToggleButton>
-              <ToggleButton
-                variant={!furnished ? 'success' : 'outline-success'}
-                id="furnished-no"
-                value={false}
-                onChange={(e) => setFurnished(false)}
-              >
-                No
-              </ToggleButton>
-            </ToggleButtonGroup>
-          </Col>
-        </Form.Group>
-
-        <Form.Group className="mb-3">
-          <Form.Label>Address</Form.Label>
-          <Form.Control
-            type="text"
-            id="address"
-            value={address}
-            onChange={(e) => setAddress(e.target.value)}
-            required
-          />
-        </Form.Group>
-
-        <Form.Group className="mb-3">
-          <Form.Label>Regular Price</Form.Label>
-          <Form.Control
-            type="number"
-            id="regularPrice"
-            value={regularPrice}
-            onChange={(e) => setRegularPrice(e.target.value)}
-            required
-          />
-        </Form.Group>
-
-        <Form.Group as={Row} className="mb-3">
-          <Form.Label column sm="3">Offer</Form.Label>
-          <Col sm="9">
-            <ToggleButtonGroup type="radio" name="offer" defaultValue={offer} className="d-flex">
-              <ToggleButton
-                variant={offer ? 'success' : 'outline-success'}
-                id="offer-yes"
-                value={true}
-                onChange={(e) => setOffer(true)}
-              >
-                Yes
-              </ToggleButton>
-              <ToggleButton
-                variant={!offer ? 'success' : 'outline-success'}
-                id="offer-no"
-                value={false}
-                onChange={(e) => setOffer(false)}
-              >
-                No
-              </ToggleButton>
-            </ToggleButtonGroup>
-          </Col>
-        </Form.Group>
-
-        {offer && (
-          <Form.Group className="mb-3">
-            <Form.Label>Discounted Price</Form.Label>
-            <Form.Control
-              type="number"
-              id="discountedPrice"
-              value={discountedPrice}
-              onChange={(e) => setDiscountedPrice(e.target.value)}
-              required={offer}
-            />
-          </Form.Group>
-        )}
-
-        <Form.Group className="mb-3">
-          <Form.Label>Image</Form.Label>
-          <Form.Control
-            type="file"
-            id="images"
-            onChange={uploadImageHandler}
-            accept=".jpg,.png,.jpeg"
-            required
-          />
-          <Form.Text className="text-muted">
-            The first image will be the cover (max 3).
-          </Form.Text>
-        </Form.Group>
-
-        <Button className='w-100 mt-4 mb-4' type="submit" variant="success">
-        {isLoading ? 'Creating...' : 'Create'}
-        </Button>
-      </Form>
+                <div className="d-grid mt-4">
+                  <Button 
+                    variant="success" 
+                    size="lg"
+                    type="submit"
+                    disabled={isLoading}
+                  >
+                    {isLoading ? 'Publishing...' : 'Publish Listing'}
+                  </Button>
+                </div>
+              </Form>
+            </Card.Body>
+          </Card>
+        </Col>
+      </Row>
     </Container>
   );
-}
+};
 
 export default CreateBuilding;

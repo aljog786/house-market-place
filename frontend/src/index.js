@@ -19,6 +19,7 @@ import PrivateRoute from './components/PrivateRoute';
 import AdminRoute from './components/AdminRoute';
 import CreateBuilding from './pages/CreateBuilding';
 import BuildingDetails  from './pages/BuildingDetails';
+import MyProperties from './pages/MyProperties';
 
 import './index.css';
 import 'bootstrap/dist/css/bootstrap.min.css';
@@ -37,6 +38,7 @@ const router = createBrowserRouter(
       <Route element={<PrivateRoute />}>
         <Route path="/profile/:id" element={<Profile />} />
         <Route path="/profile/create-building" element={<CreateBuilding />} />
+        <Route path="/profile/properties" element={<MyProperties />} />
       </Route>
 
       <Route element={<AdminRoute />}>

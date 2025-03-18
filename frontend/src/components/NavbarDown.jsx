@@ -14,7 +14,7 @@ const NavbarDown = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
-  const pathMatchRoute = (route) => route == location.pathname;
+  const pathMatchRoute = (route) => route === location.pathname;
 
   const handleProfileClick = () => {
     if (userInfo) {
