@@ -2,6 +2,47 @@ import asyncHandler from '../middleware/asyncHandler.js';
 import User from '../models/user.js';
 import jwt from 'jsonwebtoken';
 
+const registerUser = asyncHandler(async (req, res) => {
+    const { name, email, password } = req.body;
+
+    const userExists = await User.findOne({ email });
+
+    if (userExists) {
+        res.status(400);
+        throw new Error('User already exists');
+    }
+
+    const user = await User.create({
+        name,
+        email,
+        password, // This will be hashed due to the pre-save middleware in the model
+    });
+
+    if (user) {
+        const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, {
+            expiresIn: '30d',
+        });
+
+        res.cookie('jwt', token, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: 'lax',
+            maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
+        });
+
+        res.status(201).json({
+            _id: user._id,
+            name: user.name,
+            email: user.email,
+            isAdmin: user.isAdmin,
+            token,
+        });
+    } else {
+        res.status(400);
+        throw new Error('Invalid user data');
+    }
+});
+
 const authUser = asyncHandler(async (req,res) => {
     const { email,password } = req.body;
 
@@ -86,4 +127,4 @@ const logoutUser = asyncHandler(async (req,res) => {
     res.status(200).json({message: 'Logged out successfully'});
 })
 
-export { authUser,getAllUsers,getUserById,getUserProfile,logoutUser }
+export { registerUser,authUser,getAllUsers,getUserById,getUserProfile,logoutUser }
