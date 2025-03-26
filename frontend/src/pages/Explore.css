@@ -1,0 +1,19 @@
+.hover-effect {
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.hover-effect:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15) !important;
+}
+
+.property-image {
+  height: 250px;
+  object-fit: cover;
+  width: 100%;
+}
+
+.carousel-caption {
+  background: linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.5));
+  border-radius: 0.5rem;
+}
