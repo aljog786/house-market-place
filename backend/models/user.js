@@ -19,7 +19,12 @@ const userSchema = new mongoose.Schema({
         type: Boolean,
         required: true,
         default: false
-    }
+    },
+    favorites: [{
+  type: mongoose.Schema.Types.ObjectId,
+  ref: 'Building',
+  default: []
+}]
 },
 {
     timestamps: true

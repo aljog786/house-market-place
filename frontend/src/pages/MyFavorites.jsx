@@ -1,4 +1,5 @@
 import axios from "axios";
+import { BASE_URL } from "../constants";
 import BuildingItem from "../components/BuildingItem";
 import { useSelector } from "react-redux";  
 import { useState, useEffect } from "react";
@@ -7,22 +8,21 @@ import { Row, Container, Spinner, Card, Col } from "react-bootstrap";
 const MyFavorites = () => {
   const [loading, setLoading] = useState(true);
   const [buildings, setBuildings] = useState([]);
-  
-  const favorites = useSelector((state) => state.auth.favorites); // Redux favorites (IDs)
+  const { userInfo } = useSelector((state) => state.auth); // Get logged-in user info
 
   useEffect(() => {
     const fetchFavorites = async () => {
-      if (favorites.length === 0) {
-        setBuildings([]);  // Ensure state is cleared if no favorites exist
+      if (!userInfo?._id) {
+        setBuildings([]);
         setLoading(false);
         return;
       }
 
       try {
-        const { data } = await axios.get("http://localhost:8000/buildings"); 
-        // Filter only favorite buildings
-        const favoriteBuildings = data.filter(building => favorites.includes(building._id));
-        setBuildings(favoriteBuildings);
+        const { data } = await axios.get(`${BASE_URL}/users/${userInfo._id}/favorites`, {
+          withCredentials: true, // Ensure cookies (JWT) are sent
+        });
+        setBuildings(data);
       } catch (error) {
         console.error("Error fetching favorite buildings:", error);
       } finally {
@@ -31,8 +31,8 @@ const MyFavorites = () => {
     };
 
     fetchFavorites();
-  }, [favorites]);  // Runs whenever favorites change
-
+  }, [userInfo]); // Runs whenever favorites change
+console.log(buildings)
   return (
     <Container className="py-5">
       <Row className="justify-content-center">
