@@ -1,7 +1,7 @@
 const buildings =[
 		{
 			"name": "Beautiful Stratford Condo",
-            "userRef": "67cf240f1537b608dd4c7cff",
+            "userRef": "67e044b07f0578c21809ef85",
 			"type": "rent",
 			"rooms": 2,
 			"toilets": 2,
@@ -18,7 +18,7 @@ const buildings =[
 		},
 		{
 			"name": "Brand New Cincinnati Home",
-            "userRef": "67cf240f1537b608dd4c7cff",
+            "userRef": "67e044b07f0578c21809ef85",
 			"type": "sale",
 			"rooms": 4,
 			"toilets": 2,
@@ -35,7 +35,7 @@ const buildings =[
 		},
 		{
 			"name": "Classy Home In Clayton",
-            "userRef": "67cf240f1537b608dd4c7cff",
+            "userRef": "67e044b07f0578c21809ef86",
 			"type": "sale",
 			"rooms": 4,
 			"toilets": 4,
@@ -52,7 +52,7 @@ const buildings =[
 		},
 		{
 			"name": "Modern 3BR Apartment In FL",
-            "userRef": "67cf240f1537b608dd4c7cff",
+            "userRef": "67e044b07f0578c21809ef87",
 			"type": "rent",
 			"rooms": 2,
 			"toilets": 1,

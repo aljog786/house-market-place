@@ -19,6 +19,7 @@ const MyProperties = () => {
         const filteredBuildings = response.data.filter(
           (building) => building.userRef._id === userInfo._id
         );
+        console.log(filteredBuildings)
         setBuildings(filteredBuildings);
       } catch (error) {
         console.error("Error fetching buildings:", error);

@@ -9,30 +9,34 @@ import { MdFavorite } from "react-icons/md";
 import { logout } from '../slices/authSlice';
 import { useState, useEffect } from 'react';
 import axios from 'axios';
+import { BASE_URL } from '../constants';
 
 const Profile = () => {
-  const [buildings, setBuildings] = useState([]);
+  const [data, setData] = useState({ buildings: [], favorites: [] });
   const [windowWidth, setWindowWidth] = useState(window.innerWidth);
   const { userInfo } = useSelector((state) => state.auth);
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
-  const favorites = useSelector((state) => state.auth.favorites);
-
   useEffect(() => {
     if (!userInfo) return;
-    const fetchBuildings = async () => {
+
+    const fetchData = async () => {
       try {
-        const response = await axios.get("http://localhost:8000/buildings");
-        const filteredBuildings = response.data.filter(
-          (building) => building.userRef._id === userInfo._id
-        );
-        setBuildings(filteredBuildings);
+        const [favRes, buildRes] = await Promise.all([
+          axios.get(`${BASE_URL}/users/${userInfo._id}/favorites`, { withCredentials: true }),
+          axios.get("http://localhost:8000/buildings")
+        ]);
+        setData({
+          favorites: favRes.data || [],
+          buildings: buildRes.data.filter(b => b.userRef._id === userInfo._id)
+        });
       } catch (error) {
-        console.error("Error fetching buildings:", error);
+        console.error("Error fetching data:", error);
       }
     };
-    fetchBuildings();
+    
+    fetchData();
   }, [userInfo]);
   
   useEffect(() => {
@@ -89,9 +93,9 @@ const Profile = () => {
             <Col xs="auto" className="d-flex align-items-center">
             <div className="position-relative me-4">
   <MdFavorite className="text-danger" style={{ cursor: 'pointer' }} size={22} />
-  {favorites.length > 0 && (
+  {data.favorites.length > 0 && (
     <Badge pill bg="warning" className="position-absolute" style={{ top: '-8px', right: '-8px', fontSize: '0.6rem' }}>
-      {favorites.length}
+      {data.favorites.length}
     </Badge>
   )}
 </div>
@@ -111,7 +115,6 @@ const Profile = () => {
       </div>
 
       <Container className="py-3">
-        {/* User Profile Card with Animation */}
         <Card className="profile-card border-0 shadow-sm mb-4 overflow-hidden" style={{ 
           borderRadius: '16px', 
           transition: 'all 0.3s ease',
@@ -147,11 +150,11 @@ const Profile = () => {
 
                   <div className="d-flex flex-wrap gap-2 mt-4">
                     <div className="stat-box bg-primary bg-opacity-10 text-primary p-3 rounded flex-grow-1 text-center">
-                      <h3 className="mb-1">{buildings.length}</h3>
+                      <h3 className="mb-1">{data.buildings.length}</h3>
                       <small>Properties</small>
                     </div>
                     <div className="stat-box bg-success bg-opacity-10 text-success p-3 rounded flex-grow-1 text-center">
-                      <h3 className="mb-1">{favorites.length}</h3>
+                      <h3 className="mb-1">{data.favorites.length}</h3>
                       <small>Favorites</small>
                     </div>
                     <div className="stat-box bg-info bg-opacity-10 text-info p-3 rounded flex-grow-1 text-center">
@@ -165,7 +168,6 @@ const Profile = () => {
           </Card.Body>
         </Card>
 
-        {/* Navigation Cards */}
         <div className="menu-cards mb-4">
           <h5 className="fw-bold mb-3">Quick Actions</h5>
           <Row xs={1} md={2} lg={3} className="g-3">
@@ -201,7 +203,6 @@ const Profile = () => {
           </Row>
         </div>
 
-        {/* Recent Activity Section */}
         <div className="mb-4">
           <h5 className="fw-bold mb-3">Recent Activity</h5>
           <Card className="border-0 shadow-sm" style={{ borderRadius: '12px' }}>
@@ -236,7 +237,6 @@ const Profile = () => {
         </div>
       </Container>
 
-      {/* Custom CSS */}
       <style jsx>{`
         .menu-card:hover {
           transform: translateY(-5px);
