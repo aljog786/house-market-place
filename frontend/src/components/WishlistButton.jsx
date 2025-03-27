@@ -11,8 +11,6 @@ const WishlistButton = ({ id }) => {
   const [favoritesList, setFavoritesList] = useState([]);
   const { userInfo } = useSelector((state) => state.auth);
 
-  const isFavorite = favoritesList.includes(id);
-
   useEffect(() => {
     const fetchFavorites = async () => {
       if (!userInfo?._id) {
@@ -24,8 +22,7 @@ const WishlistButton = ({ id }) => {
         const { data } = await axios.get(`${BASE_URL}/users/${userInfo._id}/favorites`, {
           withCredentials: true,
         });
-        const favIds = data.map(building => building._id);
-        setFavoritesList(favIds);
+        setFavoritesList(data.map((building) => building._id));
       } catch (error) {
         console.error("Error fetching favorite buildings:", error);
       }
@@ -34,9 +31,20 @@ const WishlistButton = ({ id }) => {
     fetchFavorites();
   }, [userInfo]);
 
-  const handleFavoriteToggle = () => {
+  const handleFavoriteToggle = async () => {
     dispatch(toggleFavorite(id));
+
+    try {
+      const { data } = await axios.get(`${BASE_URL}/users/${userInfo._id}/favorites`, {
+        withCredentials: true,
+      });
+      setFavoritesList(data.map((building) => building._id));
+    } catch (error) {
+      console.error("Error fetching updated favorites:", error);
+    }
   };
+
+  const isFavorite = favoritesList.includes(id);
 
   return (
     <Button

@@ -1,7 +1,7 @@
 import express from 'express';
 const router = express.Router();
 
-import { getAllUsers, getUserFavorites,getUserById,authUser,getUserProfile,logoutUser, registerUser } from '../controllers/userController.js';
+import { getAllUsers, getUserFavorites,getUserById,authUser,getUserProfile,logoutUser, registerUser,addFavorite,removeFavorite } from '../controllers/userController.js';
 
 import { protect } from '../middleware/authMiddleware.js';
 
@@ -11,6 +11,8 @@ router.post('/auth',authUser);
 router.route('/profile').get(protect,getUserProfile);
 router.route('/:id').get(protect,getUserById);
 
-router.get('/:id/favorites', protect, getUserFavorites);
+router.route('/:id/favorites').get(protect, getUserFavorites);
+router.post('/:id/favorites/:buildingId', protect, addFavorite);
+router.delete('/:id/favorites/:buildingId', protect, removeFavorite);
 
 export default router;

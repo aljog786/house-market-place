@@ -1,6 +1,7 @@
 import asyncHandler from '../middleware/asyncHandler.js';
 import User from '../models/user.js';
 import jwt from 'jsonwebtoken';
+import mongoose from 'mongoose';
 
 const registerUser = asyncHandler(async (req, res) => {
     const { name, email, password } = req.body;
@@ -134,8 +135,51 @@ const getUserFavorites = asyncHandler(async (req, res) => {
         res.status(404);
         throw new Error('User not found');
     }
-
     res.json(user.favorites);
 });
 
-export { registerUser, authUser, getAllUsers, getUserById, getUserProfile, logoutUser, getUserFavorites };
+const addFavorite = asyncHandler(async (req, res) => {
+    const { id, buildingId } = req.params;
+    console.log("User ID:", id);
+console.log("Building ID:", buildingId);
+    if (!mongoose.Types.ObjectId.isValid(buildingId)) {
+        res.status(400);
+        throw new Error('Invalid building ID');
+    }
+    const user = await User.findById(id);
+    if (!user) {
+        res.status(404);
+        throw new Error('User not found');
+    }
+    if (!user.favorites.includes(buildingId)) {
+        user.favorites.push(buildingId);
+        await user.save();
+    }
+    res.json({ message: 'Building added to favorites', favorites: user.favorites });
+});
+
+const removeFavorite = asyncHandler(async (req, res) => {
+    const { id, buildingId } = req.params;
+
+    if (!mongoose.Types.ObjectId.isValid(buildingId)) {
+        res.status(400);
+        throw new Error('Invalid building ID');
+    }
+
+    const user = await User.findById(id);
+
+    if (!user) {
+        res.status(404);
+        throw new Error('User not found');
+    }
+    try {
+        user.favorites = user.favorites.filter((favId) => favId.toString() !== buildingId);
+        await user.save();
+        res.json({ message: 'Building removed from favorites', favorites: user.favorites });
+    } catch (error) {
+        console.error("Error removing favorite:", error);
+        res.status(500).json({ message: "Server error while removing favorite", error: error.message });
+    }
+});
+
+export { registerUser, authUser, getAllUsers, getUserById, getUserProfile, logoutUser, getUserFavorites,addFavorite,removeFavorite };
