@@ -137,6 +137,28 @@ const getUserFavorites = asyncHandler(async (req, res) => {
     }
     res.json(user.favorites);
 });
+const updateUserProfile = asyncHandler(async (req, res) => {
+    const user = await User.findById(req.user._id);
+
+    if (user) {
+        user.name = req.body.name || user.name;
+
+        if (req.body.password) {
+            user.password = req.body.password;
+        }
+
+        const updatedUser = await user.save();
+
+        res.json({
+            _id: updatedUser._id,
+            name: updatedUser.name,
+            email: updatedUser.email,
+        });
+    } else {
+        res.status(404);
+        throw new Error('User not found');
+    }
+});
 
 const addFavorite = asyncHandler(async (req, res) => {
     const { id, buildingId } = req.params;
@@ -182,4 +204,4 @@ const removeFavorite = asyncHandler(async (req, res) => {
     }
 });
 
-export { registerUser, authUser, getAllUsers, getUserById, getUserProfile, logoutUser, getUserFavorites,addFavorite,removeFavorite };
+export { registerUser, authUser, getAllUsers, getUserById, getUserProfile, updateUserProfile,logoutUser, getUserFavorites,addFavorite,removeFavorite };

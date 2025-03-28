@@ -142,7 +142,7 @@ const Profile = () => {
                       <h4 className="fw-bold mb-1">{userInfo?.name}</h4>
                       <p className="mb-0 text-muted">{userInfo?.email}</p>
                     </div>
-                    <Link to="/update-profile" className="btn btn-outline-primary btn-sm d-flex align-items-center">
+                    <Link to="/profile/edit" className="btn btn-outline-primary btn-sm d-flex align-items-center">
                       <FaUserEdit className="me-2" />
                       {windowWidth > 576 ? 'Edit Profile' : ''}
                     </Link>

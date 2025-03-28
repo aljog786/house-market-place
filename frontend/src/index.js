@@ -24,6 +24,7 @@ import MyProperties from './pages/MyProperties';
 import './index.css';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import MyFavorites from './pages/MyFavorites';
+import EditProfile from './pages/EditProfile';
 
 const router = createBrowserRouter(
   createRoutesFromElements(
@@ -41,6 +42,7 @@ const router = createBrowserRouter(
         <Route path="/profile/create-building" element={<CreateBuilding />} />
         <Route path="/profile/properties" element={<MyProperties />} />
         <Route path="/profile/favorites" element={<MyFavorites />} />
+        <Route path="/profile/edit" element={<EditProfile />} />
       </Route>
 
       <Route element={<AdminRoute />}>

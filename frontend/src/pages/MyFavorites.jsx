@@ -19,7 +19,7 @@ const MyFavorites = () => {
       }
       try {
         const { data } = await axios.get(`${BASE_URL}/users/${userInfo._id}/favorites`, {
-          withCredentials: true, // Ensure cookies (JWT) are sent
+          withCredentials: true 
         });
         setBuildings(data);
       } catch (error) {
