@@ -1,44 +1,31 @@
-import { Row, Col, Container, Card, Button, Badge, Nav, Image } from 'react-bootstrap';
-import { useSelector, useDispatch } from 'react-redux';
+import { useState, useEffect } from 'react';
+import { useSelector } from 'react-redux';
 import { Link, useNavigate } from 'react-router-dom';
-import { FaPowerOff, FaUserEdit } from "react-icons/fa";
+import { Row, Col, Container, Card, Badge, Nav, Image } from 'react-bootstrap';
+import { FaUserEdit } from "react-icons/fa";
 import { FaCircleChevronRight } from "react-icons/fa6";
 import { MdOutlineAddHomeWork } from "react-icons/md";
 import { GoHomeFill } from "react-icons/go";
 import { MdFavorite } from "react-icons/md";
-import { logout } from '../slices/authSlice';
-import { useState, useEffect } from 'react';
-import axios from 'axios';
-import { BASE_URL } from '../constants';
+import { useGetUserFavoritesQuery } from '../slices/usersApiSlice';
+import { useGetBuildingsQuery } from '../slices/buildingsApiSlice'; // Make sure this endpoint is created
 
 const Profile = () => {
-  const [data, setData] = useState({ buildings: [], favorites: [] });
   const [windowWidth, setWindowWidth] = useState(window.innerWidth);
   const { userInfo } = useSelector((state) => state.auth);
-  const dispatch = useDispatch();
   const navigate = useNavigate();
 
-  useEffect(() => {
-    if (!userInfo) return;
+  const { data: favorites = [] } =
+  useGetUserFavoritesQuery(userInfo?._id, { skip: !userInfo });
 
-    const fetchData = async () => {
-      try {
-        const [favRes, buildRes] = await Promise.all([
-          axios.get(`${BASE_URL}/users/${userInfo._id}/favorites`, { withCredentials: true }),
-          axios.get("http://localhost:8000/buildings")
-        ]);
-        setData({
-          favorites: favRes.data || [],
-          buildings: buildRes.data.filter(b => b.userRef._id === userInfo._id)
-        });
-      } catch (error) {
-        console.error("Error fetching data:", error);
-      }
-    };
-    
-    fetchData();
-  }, [userInfo]);
-  
+  const { data: buildings = [] } =
+  useGetBuildingsQuery(undefined, { 
+    selectFromResult: ({ data }) => ({
+      data: data?.filter(b => b.userRef._id === userInfo?._id) || []
+    }),
+    skip: !userInfo 
+  });
+
   useEffect(() => {
     const handleResize = () => setWindowWidth(window.innerWidth);
     window.addEventListener('resize', handleResize);
@@ -49,11 +36,6 @@ const Profile = () => {
     navigate('/login');
     return null;
   }
-
-  const handleLogout = () => {
-    dispatch(logout());
-    navigate('/login');
-  };
 
   const menuItems = [
     { 
@@ -76,44 +58,6 @@ const Profile = () => {
 
   return (
     <div className="profile-page bg-light min-vh-100">
-      {/* Header with gradient background */}
-      <div className="bg-gradient-primary text-white py-4 mb-4" style={{ 
-        background: 'linear-gradient(135deg,rgb(58, 187, 137) 0%,rgb(140, 127, 225) 100%)',
-        borderBottom: '1px solid rgba(0,0,0,0.1)',
-        boxShadow: '0 4px 20px rgba(0,0,0,0.1)'
-      }}>
-        <Container>
-          <Row className="align-items-center">
-            <Col>
-              <h2 className="fw-bold mb-0 display-6">Welcome Back!</h2>
-              <p className="mb-0 text-white-50">
-                {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
-              </p>
-            </Col>
-            <Col xs="auto" className="d-flex align-items-center">
-            <div className="position-relative me-4">
-  <MdFavorite className="text-danger" style={{ cursor: 'pointer' }} size={22} />
-  {data.favorites.length > 0 && (
-    <Badge pill bg="warning" className="position-absolute" style={{ top: '-8px', right: '-8px', fontSize: '0.6rem' }}>
-      {data.favorites.length}
-    </Badge>
-  )}
-</div>
-
-              <Button 
-                variant="outline-light" 
-                size="sm" 
-                className="d-flex align-items-center" 
-                onClick={handleLogout}
-              >
-                <FaPowerOff className="me-2" size={16} />
-                {windowWidth > 576 ? 'Logout' : ''}
-              </Button>
-            </Col>
-          </Row>
-        </Container>
-      </div>
-
       <Container className="py-3">
         <Card className="profile-card border-0 shadow-sm mb-4 overflow-hidden" style={{ 
           borderRadius: '16px', 
@@ -150,11 +94,11 @@ const Profile = () => {
 
                   <div className="d-flex flex-wrap gap-2 mt-4">
                     <div className="stat-box bg-primary bg-opacity-10 text-primary p-3 rounded flex-grow-1 text-center">
-                      <h3 className="mb-1">{data.buildings.length}</h3>
+                      <h3 className="mb-1">{buildings.length}</h3>
                       <small>Properties</small>
                     </div>
                     <div className="stat-box bg-success bg-opacity-10 text-success p-3 rounded flex-grow-1 text-center">
-                      <h3 className="mb-1">{data.favorites.length}</h3>
+                      <h3 className="mb-1">{favorites.length}</h3>
                       <small>Favorites</small>
                     </div>
                     <div className="stat-box bg-info bg-opacity-10 text-info p-3 rounded flex-grow-1 text-center">
@@ -236,18 +180,6 @@ const Profile = () => {
           </Card>
         </div>
       </Container>
-
-      <style jsx>{`
-        .menu-card:hover {
-          transform: translateY(-5px);
-          box-shadow: 0 10px 20px rgba(0,0,0,0.1);
-        }
-        @media (max-width: 768px) {
-          .profile-bg {
-            background: linear-gradient(45deg, #f3f4f6 0%, #e5e7eb 100%);
-          }
-        }
-      `}</style>
     </div>
   );
 };

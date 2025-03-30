@@ -43,8 +43,16 @@ export const usersApiSlice = apiSlice.injectEndpoints({
                 method: 'PUT',
                 body: data
             })
+        }),
+        getUserFavorites: builder.query({
+            query: (userId) => ({
+                url: `${USERS_URL}/${userId}/favorites`,
+                method: "GET",
+                credentials: "include",
+            }),
+            providesTags: ["Favorites"],
         })
     })
 })
 
-export const { useLoginMutation,useRegisterMutation,useLogoutMutation,useProfileMutation,useUpdateProfileMutation } = usersApiSlice;
+export const { useGetAllUsersQuery,useLoginMutation,useRegisterMutation,useLogoutMutation,useProfileMutation,useUpdateProfileMutation,useGetUserFavoritesQuery } = usersApiSlice;

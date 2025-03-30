@@ -14,7 +14,7 @@ import {
   ProgressBar,
   Stack
 } from 'react-bootstrap';
-import { FaUpload, FaRegImages, FaMoneyBillWave, FaMapMarkerAlt } from 'react-icons/fa';
+import { FaUpload } from 'react-icons/fa';
 import { useCreateBuildingMutation, useUploadBuildingImageMutation } from '../slices/buildingsApiSlice';
 
 const CreateBuilding = () => {
@@ -31,7 +31,7 @@ const CreateBuilding = () => {
     discountedPrice: '',
   });
   const [images, setImages] = useState([]);
-  const [uploadProgress, setUploadProgress] = useState(0);
+  const [uploadProgress] = useState(0);
 
   const { userInfo } = useSelector((state) => state.auth);
   const navigate = useNavigate();
@@ -249,7 +249,7 @@ const CreateBuilding = () => {
                 {/* Image Upload */}
                 <Form.Group className="mb-4">
                   <Form.Label className="fw-bold d-block">Property Images</Form.Label>
-                  <Form.Text className="d-block mb-2">Upload up to 3 images (JPEG/PNG)</Form.Text>
+                  <Form.Text className="d-block mb-2">Upload up to 3 images (JPEG/PNG/JPG)</Form.Text>
                   
                   <div className="border rounded-3 p-3 bg-light">
                     <Row className="g-3">
