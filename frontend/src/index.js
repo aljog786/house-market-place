@@ -20,6 +20,7 @@ import AdminRoute from './components/AdminRoute';
 import CreateBuilding from './pages/CreateBuilding';
 import BuildingDetails  from './pages/BuildingDetails';
 import MyProperties from './pages/MyProperties';
+import OtpInput from './components/OtpInput';
 
 import './index.css';
 import 'bootstrap/dist/css/bootstrap.min.css';
@@ -34,6 +35,7 @@ const router = createBrowserRouter(
       <Route path="/offers" element={<Offers />} />
       <Route path="/login" element={<SignIn />} />
       <Route path="/register" element={<Register />} />
+      <Route path="/register/otp" element={<OtpInput />} />
       <Route path="/building-details/:id" element={<BuildingDetails />} />
 
 

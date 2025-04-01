@@ -1,12 +1,9 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Container, Row, Col, Form, Button, InputGroup, Card } from "react-bootstrap";
-import { FaEnvelope, FaLock, FaEye, FaEyeSlash, FaUserPlus } from "react-icons/fa";
+import { FaEnvelope, FaLock, FaEye, FaEyeSlash } from "react-icons/fa";
 import { CgProfile } from "react-icons/cg";
-import { useRegisterMutation } from '../slices/usersApiSlice';
-import { useDispatch } from 'react-redux';
-import { setCredentials } from '../slices/authSlice';
-
+import { BASE_URL } from "../constants";
 
 const Register = () => {
   const [showPassword, setShowPassword] = useState(false);
@@ -17,39 +14,48 @@ const Register = () => {
     cnfPassword: ''
   });
 
-  const { name, email, password,cnfPassword } = formData;
+  const { name, email, password, cnfPassword } = formData;
   const navigate = useNavigate();
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const dispatch = useDispatch();
-const [registerUser] = useRegisterMutation();
-
-const handleSubmit = async (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-
+  
     if (password !== cnfPassword) {
-        alert('Passwords do not match');
-        return;
+      alert("Passwords do not match!");
+      return;
     }
-
+  
     try {
-        const res = await registerUser({ name, email, password }).unwrap();
-        dispatch(setCredentials(res));
-        navigate('/');
-    } catch (err) {
-        alert(err?.data?.message || 'Something went wrong');
+      const response = await fetch(`${BASE_URL}/auth/register`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ name, email, password }),
+        credentials: "include", // include cookies
+      });
+  
+      const data = await response.json();
+  
+      if (response.ok) {
+        alert("OTP sent to your email!");
+        // Navigate to OTP verification page
+        navigate("/register/otp");
+      } else {
+        alert(data.message || "Failed to send OTP");
+      }
+    } catch (error) {
+      console.error("Error sending OTP:", error);
     }
-};
-
+  };
 
   return (
     <Container fluid className="vh-100 d-flex align-items-center justify-content-center" 
-      style={{ 
-        background: "linear-gradient(135deg, #e0f7fa 0%, #80deea 100%)",
-      }}>
+      style={{ background: "linear-gradient(135deg, #e0f7fa 0%, #80deea 100%)" }}>
       <Row className="w-100 justify-content-center">
         <Col xs={12} sm={10} md={6} lg={4} xl={4}>
           <Card className="shadow-lg border-0 rounded-lg overflow-hidden">
@@ -77,7 +83,6 @@ const handleSubmit = async (e) => {
                     />
                   </InputGroup>
                 </Form.Group>
-
                 {/* Email Input */}
                 <Form.Group className="mb-4" controlId="formEmail">
                   <Form.Label className="fw-semibold text-secondary">Email Address</Form.Label>
@@ -96,7 +101,6 @@ const handleSubmit = async (e) => {
                     />
                   </InputGroup>
                 </Form.Group>
-
                 {/* Password Input */}
                 <Form.Group className="mb-4" controlId="formPassword">
                   <Form.Label className="fw-semibold text-secondary">Password</Form.Label>
@@ -126,22 +130,22 @@ const handleSubmit = async (e) => {
                     Password must be at least 6 characters long
                   </Form.Text>
                 </Form.Group>
-                                {/* ConfirmPassword Input */}
-                                <Form.Group className="mb-4" controlId="formPassword">
+                {/* Confirm Password Input */}
+                <Form.Group className="mb-4" controlId="formPasswordConfirm">
                   <Form.Label className="fw-semibold text-secondary">Confirm Password</Form.Label>
                   <InputGroup className="mb-1">
                     <InputGroup.Text className="bg-light border">
                       <FaLock className="text-success" />
                     </InputGroup.Text>
                     <Form.Control
-  type={showPassword ? "text" : "password"}
-  placeholder="Confirm password"
-  name="cnfPassword"  // Change to cnfPassword instead of password
-  value={cnfPassword}
-  onChange={handleChange}
-  required
-  className="py-2 fs-6"
-/>
+                      type={showPassword ? "text" : "password"}
+                      placeholder="Confirm password"
+                      name="cnfPassword"
+                      value={cnfPassword}
+                      onChange={handleChange}
+                      required
+                      className="py-2 fs-6"
+                    />
                     <Button
                       variant="light"
                       onClick={() => setShowPassword(!showPassword)}
@@ -155,7 +159,6 @@ const handleSubmit = async (e) => {
                     {password === cnfPassword ? "Password matches" : "Password does not match"}
                   </Form.Text>
                 </Form.Group>
-
                 {/* Submit Button */}
                 <Button
                   variant="success"
@@ -166,8 +169,7 @@ const handleSubmit = async (e) => {
                     boxShadow: "0 4px 6px rgba(50, 50, 93, 0.11), 0 1px 3px rgba(0, 0, 0, 0.08)"
                   }}
                 >
-                  <FaUserPlus />
-                  <span>Create Account</span>
+                  <span>Send OTP</span>
                 </Button>
               </Form>
             </Card.Body>
