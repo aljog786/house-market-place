@@ -12,7 +12,6 @@ const Offers = () => {
     const fetchBuildings = async () => {
       try {
         const response = await axios.get("http://localhost:8000/buildings");
-        // Filter buildings to only include those with an active offer
         const filteredBuildings = response.data.filter(
           (building) => building.offer === true
         );
@@ -29,7 +28,7 @@ const Offers = () => {
 
   return (
     <Container>
-      <h2 className="mb-4">Offers</h2>
+      <h2 className="mb-4 mt-4">Offers</h2>
       {loading ? (
         <ReactLoading type="Bars" color="#444" />
       ) : (

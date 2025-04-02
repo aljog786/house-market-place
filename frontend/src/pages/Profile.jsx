@@ -8,7 +8,8 @@ import { MdOutlineAddHomeWork } from "react-icons/md";
 import { GoHomeFill } from "react-icons/go";
 import { MdFavorite } from "react-icons/md";
 import { useGetUserFavoritesQuery } from '../slices/usersApiSlice';
-import { useGetBuildingsQuery } from '../slices/buildingsApiSlice'; // Make sure this endpoint is created
+import { useGetBuildingsQuery } from '../slices/buildingsApiSlice';
+import Header from '../components/Header';
 
 const Profile = () => {
   const [windowWidth, setWindowWidth] = useState(window.innerWidth);
@@ -58,6 +59,7 @@ const Profile = () => {
 
   return (
     <div className="profile-page bg-light min-vh-100">
+    <Header />
       <Container className="py-3">
         <Card className="profile-card border-0 shadow-sm mb-4 overflow-hidden" style={{ 
           borderRadius: '16px', 

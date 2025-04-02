@@ -2,6 +2,8 @@ import { Container, Image, Badge } from "react-bootstrap";
 import { useSelector, useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { MdFavorite } from "react-icons/md";
+import { FaCartShopping } from "react-icons/fa6";
+import { BiSolidMessageDetail } from "react-icons/bi";
 import { LuCirclePower } from "react-icons/lu";
 import { logout } from "../slices/authSlice";
 import logo from "../assets/png/Logo.png";
@@ -24,6 +26,8 @@ const Header = () => {
     navigate("/login");
   };
 
+  const cartItems = useSelector((state) => state.cart.cartItems);
+
   return (
     <Container className="d-flex justify-content-between p-3">
       <div className="d-flex align-items-center">
@@ -33,6 +37,22 @@ const Header = () => {
 
       {userInfo && (
         <div className="d-flex align-items-center">
+        <div className="position-relative me-3" onClick={() => navigate("/messages")} style={{ cursor: "pointer" }}>
+            <BiSolidMessageDetail className="text-info" size={24} />
+            {!isLoading && !isError && favoritesCount > 0 && (
+              <Badge pill bg="warning" className="position-absolute" style={{ top: "-8px", right: "-8px", fontSize: "0.7rem" }}>
+                {cartItems.length}
+              </Badge>
+            )}
+          </div>
+          <div className="position-relative me-3" onClick={() => navigate("/cart")} style={{ cursor: "pointer" }}>
+            <FaCartShopping className="text-secondary" size={24} />
+            {!isLoading && !isError && favoritesCount > 0 && (
+              <Badge pill bg="warning" className="position-absolute" style={{ top: "-8px", right: "-8px", fontSize: "0.7rem" }}>
+                {cartItems.length}
+              </Badge>
+            )}
+          </div>
           <div className="position-relative me-3" onClick={() => navigate("/profile/favorites")} style={{ cursor: "pointer" }}>
             <MdFavorite className="text-danger" size={24} />
             {!isLoading && !isError && favoritesCount > 0 && (

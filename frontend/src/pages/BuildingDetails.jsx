@@ -1,11 +1,15 @@
 import { useEffect, useState } from "react";
 import { useParams,useNavigate } from "react-router-dom";
+import { useDispatch } from 'react-redux';
 import axios from "axios";
 import { Container, Row, Col, Card, Button, Spinner, Carousel, Badge } from "react-bootstrap";
 import { FaBed, FaBath, FaCar, FaCouch, FaMapMarkerAlt, FaPhone, FaShoppingCart } from "react-icons/fa";
 import WishlistButton from "../components/WishlistButton";
+import { addToCart } from '../slices/cartSlice';
 
 const BuildingDetails = () => {
+const dispatch = useDispatch();
+const navigate = useNavigate();
   const { id } = useParams();
   const [building, setBuilding] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -25,10 +29,10 @@ const BuildingDetails = () => {
     fetchBuildingDetails();
   }, [id]);
 
-  const navigate = useNavigate();
-const handleBuyNow = () => {
-  navigate(`/checkout/${id}`);
-};
+  const handleBuyNow = () => {
+      dispatch(addToCart(building));
+      navigate(`/cart`);
+    };
 
   if (loading) {
     return (

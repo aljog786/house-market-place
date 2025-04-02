@@ -1,5 +1,7 @@
 import { memo } from 'react';
 import { Link,useNavigate } from "react-router-dom";
+import { useDispatch } from 'react-redux';
+import { addToCart } from '../slices/cartSlice';
 import { Card, Row, Col, Badge, Button } from "react-bootstrap";
 import { FaBed, FaBath } from "react-icons/fa";
 import { RiMoneyRupeeCircleFill } from "react-icons/ri";
@@ -8,6 +10,7 @@ import './BuildingItem.css';
 
 const BuildingItem = memo(({ building, id }) => {
 const navigate = useNavigate();
+const dispatch = useDispatch();
   const { 
     imageUrls, 
     address, 
@@ -20,14 +23,16 @@ const navigate = useNavigate();
     toilets 
   } = building;
 
-const handleBuyNow = () => {
-  navigate(`/checkout/${id}`);
-};
+  const handleBuyNow = () => {
+    dispatch(addToCart(building));
+    navigate(`/cart`);
+  };
+  
 
   return (
     <Col xs={12} sm={6} lg={4} xl={3} className="mb-4">
       <Card className="h-100 card-hover border-0 shadow-sm overflow-hidden">
-      <WishlistButton id={id} />
+        <WishlistButton id={id} />
         <Link to={`/building-details/${id}`} className="text-decoration-none">
           <div className="ratio ratio-16x9">
             <Card.Img
@@ -39,7 +44,6 @@ const handleBuyNow = () => {
             />
           </div>
         </Link>
-
         <Card.Body className="d-flex flex-column pt-3">
           <div className="mb-2">
             {offer && (
@@ -54,7 +58,6 @@ const handleBuyNow = () => {
               {address}
             </Card.Text>
           </div>
-
           <div className="mt-auto">
             <div className="d-flex align-items-center gap-2 mb-2">
               <RiMoneyRupeeCircleFill className="text-success" />
@@ -68,9 +71,7 @@ const handleBuyNow = () => {
                 {type === 'rent' ? '/month' : ''}
               </span>
             </div>
-
             <hr className="my-2" />
-
             <Row className="g-2 text-center small">
               <Col>
                 <div className="d-flex align-items-center justify-content-center gap-1">
@@ -85,8 +86,6 @@ const handleBuyNow = () => {
                 </div>
               </Col>
             </Row>
-
-            {/* Buy Now Button */}
             <Button 
               variant="primary" 
               className="mt-3 w-100 fw-bold"

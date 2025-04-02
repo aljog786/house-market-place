@@ -4,8 +4,10 @@ import { useUpdateProfileMutation } from "../slices/usersApiSlice";
 import { useDispatch, useSelector } from "react-redux";
 import { setCredentials } from "../slices/authSlice";
 import { toast } from "react-toastify";
+import { useNavigate } from "react-router-dom";
 
 const EditProfile = () => {
+  const navigate = useNavigate();
   const dispatch = useDispatch();
   const { userInfo } = useSelector((state) => state.auth);
   const [name, setName] = useState(userInfo?.name || "");
@@ -26,6 +28,7 @@ const EditProfile = () => {
       const res = await updateProfile({ name, password }).unwrap();
       dispatch(setCredentials(res));
       alert("Profile updated successfully!");
+      navigate(`/profile/${userInfo._id}`)
     } catch (error) {
       alert("Error updating profile");
     }

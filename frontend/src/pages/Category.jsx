@@ -28,7 +28,7 @@ const Category = () => {
 
   return (
     <Container>
-      <h2 className="mb-4">{type === "rent" ? "Places for Rent" : "Places for Sale"}</h2>
+      <h2 className="mb-4 mt-4">{type === "rent" ? "Places for Rent" : "Places for Sale"}</h2>
       {loading ? (
         <ReactLoading type="Bars" color="#444"/>
       ) : (
