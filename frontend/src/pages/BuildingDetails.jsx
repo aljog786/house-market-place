@@ -1,14 +1,14 @@
 import { useEffect, useState } from "react";
 import { useParams,useNavigate } from "react-router-dom";
-import { useDispatch } from 'react-redux';
+import { useSelector } from "react-redux";
 import axios from "axios";
 import { Container, Row, Col, Card, Button, Spinner, Carousel, Badge } from "react-bootstrap";
 import { FaBed, FaBath, FaCar, FaCouch, FaMapMarkerAlt, FaPhone, FaShoppingCart } from "react-icons/fa";
 import WishlistButton from "../components/WishlistButton";
-import { addToCart } from '../slices/cartSlice';
+import { useAddToCartMutation } from '../slices/usersApiSlice';
+
 
 const BuildingDetails = () => {
-const dispatch = useDispatch();
 const navigate = useNavigate();
   const { id } = useParams();
   const [building, setBuilding] = useState(null);
@@ -29,11 +29,21 @@ const navigate = useNavigate();
     fetchBuildingDetails();
   }, [id]);
 
-  const handleBuyNow = () => {
-      dispatch(addToCart(building));
-      navigate(`/cart`);
-    };
-
+  const userId = useSelector((state) => state.auth.userInfo?._id);
+  const [addToCart] = useAddToCartMutation();
+  const handleBuyNow = async () => {
+    if (!userId) {
+      console.error('User not logged in');
+      return;
+    }
+    try {
+      await addToCart({ userId, buildingId: id }).unwrap();
+      navigate('/cart');
+    } catch (error) {
+      console.error('Failed to add to cart', error);
+    }
+  };
+  
   if (loading) {
     return (
       <Container className="text-center mt-5">

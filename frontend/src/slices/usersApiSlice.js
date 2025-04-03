@@ -51,8 +51,32 @@ export const usersApiSlice = apiSlice.injectEndpoints({
                 credentials: "include",
             }),
             providesTags: ["Favorites"],
+        }),
+        getUserCart: builder.query({
+            query: (userId) => ({
+                url: `${USERS_URL}/${userId}/cart`,
+                method: "GET",
+                credentials: "include",
+            }),
+            providesTags: ["Cart"],
+        }),
+        addToCart: builder.mutation({
+            query: ({ userId, buildingId }) => ({
+                url: `${USERS_URL}/${userId}/cart/${buildingId}`,
+                method: "POST",
+                credentials: "include",
+            }),
+            invalidatesTags: ["Cart"],
+        }),
+        removeFromCart: builder.mutation({
+            query: ({ userId, buildingId }) => ({
+                url: `${USERS_URL}/${userId}/cart/${buildingId}`,
+                method: "DELETE",
+                credentials: "include",
+            }),
+            invalidatesTags: ["Cart"],
         })
     })
 })
 
-export const { useGetAllUsersQuery,useLoginMutation,useRegisterMutation,useLogoutMutation,useProfileMutation,useUpdateProfileMutation,useGetUserFavoritesQuery } = usersApiSlice;
+export const { useGetAllUsersQuery,useLoginMutation,useRegisterMutation,useLogoutMutation,useProfileMutation,useUpdateProfileMutation,useGetUserFavoritesQuery,useGetUserCartQuery,useAddToCartMutation,useRemoveFromCartMutation } = usersApiSlice;

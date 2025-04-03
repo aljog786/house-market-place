@@ -1,16 +1,15 @@
 import { memo } from 'react';
 import { Link,useNavigate } from "react-router-dom";
-import { useDispatch } from 'react-redux';
-import { addToCart } from '../slices/cartSlice';
+import { useSelector } from 'react-redux';
 import { Card, Row, Col, Badge, Button } from "react-bootstrap";
 import { FaBed, FaBath } from "react-icons/fa";
 import { RiMoneyRupeeCircleFill } from "react-icons/ri";
 import WishlistButton from './WishlistButton';
+import { useAddToCartMutation } from '../slices/usersApiSlice';
 import './BuildingItem.css';
 
 const BuildingItem = memo(({ building, id }) => {
 const navigate = useNavigate();
-const dispatch = useDispatch();
   const { 
     imageUrls, 
     address, 
@@ -23,11 +22,20 @@ const dispatch = useDispatch();
     toilets 
   } = building;
 
-  const handleBuyNow = () => {
-    dispatch(addToCart(building));
-    navigate(`/cart`);
+  const userId = useSelector((state) => state.auth.userInfo?._id);
+  const [addToCart] = useAddToCartMutation();
+  const handleBuyNow = async () => {
+    if (!userId) {
+      console.error('User not logged in');
+      return;
+    }
+    try {
+      await addToCart({ userId, buildingId: id }).unwrap();
+      navigate('/cart');
+    } catch (error) {
+      console.error('Failed to add to cart', error);
+    }
   };
-  
 
   return (
     <Col xs={12} sm={6} lg={4} xl={3} className="mb-4">

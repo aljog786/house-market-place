@@ -203,5 +203,59 @@ const removeFavorite = asyncHandler(async (req, res) => {
         res.status(500).json({ message: "Server error while removing favorite", error: error.message });
     }
 });
+const getUserCart = asyncHandler(async (req, res) => {
+    const user = await User.findById(req.params.id).populate('cart');
 
-export { registerUser, authUser, getAllUsers, getUserById, getUserProfile, updateUserProfile,logoutUser, getUserFavorites,addFavorite,removeFavorite };
+    if (!user) {
+        res.status(404);
+        throw new Error('User not found');
+    }
+
+    res.json(user.cart);
+});
+
+const addToCart = asyncHandler(async (req, res) => {
+    const { id, buildingId } = req.params;
+
+    if (!mongoose.Types.ObjectId.isValid(buildingId)) {
+        res.status(400);
+        throw new Error('Invalid building ID');
+    }
+
+    const user = await User.findById(id);
+
+    if (!user) {
+        res.status(404);
+        throw new Error('User not found');
+    }
+
+    if (!user.cart.includes(buildingId)) {
+        user.cart.push(buildingId);
+        await user.save();
+    }
+
+    res.json({ message: 'Building added to cart', cart: user.cart });
+});
+const removeFromCart = asyncHandler(async (req, res) => {
+    const { id, buildingId } = req.params;
+
+    if (!mongoose.Types.ObjectId.isValid(buildingId)) {
+        res.status(400);
+        throw new Error('Invalid building ID');
+    }
+
+    const user = await User.findById(id);
+
+    if (!user) {
+        res.status(404);
+        throw new Error('User not found');
+    }
+
+    user.cart = user.cart.filter((item) => item.toString() !== buildingId);
+    await user.save();
+
+    res.json({ message: 'Building removed from cart', cart: user.cart });
+});
+
+
+export { getUserCart,addToCart,removeFromCart,registerUser, authUser, getAllUsers, getUserById, getUserProfile, updateUserProfile,logoutUser, getUserFavorites,addFavorite,removeFavorite };
