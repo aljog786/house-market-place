@@ -27,6 +27,7 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 import MyFavorites from './pages/MyFavorites';
 import EditProfile from './pages/EditProfile';
 import Cart from './pages/Cart';
+import Chats from './pages/Chats';
 
 const router = createBrowserRouter(
   createRoutesFromElements(
@@ -43,6 +44,7 @@ const router = createBrowserRouter(
       <Route element={<PrivateRoute />}>
         <Route path="/profile/:id" element={<Profile />} />
         <Route path="/cart" element={<Cart />} />
+        <Route path='/profile/chats' element={<Chats/>}/>
         <Route path="/profile/create-building" element={<CreateBuilding />} />
         <Route path="/profile/properties" element={<MyProperties />} />
         <Route path="/profile/favorites" element={<MyFavorites />} />

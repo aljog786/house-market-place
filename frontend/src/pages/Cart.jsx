@@ -55,7 +55,19 @@ const Cart = () => {
                 </Card>
               ))
             )}
+            {cartItems?.length > 0 && (
+              <div className="border-top pt-4 text-center">
+                <Button 
+                  variant="success" 
+                  size="lg"
+                  className="mt-3"
+                >
+                  Confirm Payment
+                </Button>
+              </div>
+            )}
           </Card>
+          
         </Col>
       </Row>
     </Container>

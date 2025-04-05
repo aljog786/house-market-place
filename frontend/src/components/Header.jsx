@@ -37,7 +37,7 @@ const Header = () => {
 
       {userInfo && (
         <div className="d-flex align-items-center">
-        <div className="position-relative me-3" onClick={() => navigate("/messages")} style={{ cursor: "pointer" }}>
+        <div className="position-relative me-3" onClick={() => navigate("/profile/chats")} style={{ cursor: "pointer" }}>
             <BiSolidMessageDetail className="text-info" size={24} />
             {!isLoading && !isError && favoritesCount > 0 && (
               <Badge pill bg="warning" className="position-absolute" style={{ top: "-8px", right: "-8px", fontSize: "0.7rem" }}>

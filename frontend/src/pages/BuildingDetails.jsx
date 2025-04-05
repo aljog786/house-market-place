@@ -7,7 +7,6 @@ import { FaBed, FaBath, FaCar, FaCouch, FaMapMarkerAlt, FaPhone, FaShoppingCart 
 import WishlistButton from "../components/WishlistButton";
 import { useAddToCartMutation } from '../slices/usersApiSlice';
 
-
 const BuildingDetails = () => {
 const navigate = useNavigate();
   const { id } = useParams();
@@ -61,6 +60,11 @@ const navigate = useNavigate();
       </Container>
     );
   }
+
+  const handleSendInquiry = () => {
+    if (!building) return;
+    navigate('/profile/chats', { state: { building } });
+  };
 
   return (
     <Container className="my-5">
@@ -142,7 +146,7 @@ const navigate = useNavigate();
               <Button variant="primary" className="w-100 mb-2">
                 <FaPhone className="me-2" /> Call Now
               </Button>
-              <Button variant="outline-primary" className="w-100">
+              <Button variant="outline-primary" className="w-100" onClick={handleSendInquiry}>
                 Send Inquiry
               </Button>
             </Card.Body>
