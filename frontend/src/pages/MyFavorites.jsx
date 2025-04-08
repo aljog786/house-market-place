@@ -1,37 +1,14 @@
-import axios from "axios";
-import { BASE_URL } from "../constants";
+import { Container, Row, Spinner, Card, Col } from "react-bootstrap";
 import BuildingItem from "../components/BuildingItem";
 import { useSelector } from "react-redux";  
-import { useState, useEffect } from "react";
-import { Row, Container, Spinner, Card, Col } from "react-bootstrap";
+import { useGetUserFavoritesQuery } from "../slices/usersApiSlice";
 
 const MyFavorites = () => {
-  const [loading, setLoading] = useState(true);
-  const [buildings, setBuildings] = useState([]);
-  const { userInfo } = useSelector((state) => state.auth); // Get logged-in user info
+  const { userInfo } = useSelector((state) => state.auth);
+  const userId = userInfo?._id;
 
-  useEffect(() => {
-    const fetchFavorites = async () => {
-      if (!userInfo?._id) {
-        setBuildings([]);
-        setLoading(false);
-        return;
-      }
-      try {
-        const { data } = await axios.get(`${BASE_URL}/users/${userInfo._id}/favorites`, {
-          withCredentials: true 
-        });
-        setBuildings(data);
-      } catch (error) {
-        console.error("Error fetching favorite buildings:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
+  const { data: buildings = [], isLoading, isError, error } = useGetUserFavoritesQuery(userId, { skip: !userId });
 
-    fetchFavorites();
-  }, [userInfo]); // Runs whenever favorites change
-console.log(buildings)
   return (
     <Container className="py-5">
       <Row className="justify-content-center">
@@ -41,11 +18,12 @@ console.log(buildings)
               <div className="d-flex justify-content-between align-items-center mb-4">
                 <h2 className="text-success mb-0">My Favorites</h2>
               </div>
-
-              {loading ? (
+              {isLoading ? (
                 <div className="d-flex justify-content-center p-5">
                   <Spinner animation="border" variant="success" />
                 </div>
+              ) : isError ? (
+                <p>Error fetching favorites: {error?.data?.message || error.error}</p>
               ) : buildings.length > 0 ? (
                 <Row>
                   {buildings.map((building) => (

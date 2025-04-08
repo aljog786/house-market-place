@@ -1,11 +1,12 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Container, Row, Col, Form, Button } from "react-bootstrap";
-import { BASE_URL } from "../constants";
+import { useVerifyOtpMutation } from "../slices/otpApiSlice";
 
 const OtpInput = () => {
   const [otp, setOtp] = useState("");
   const navigate = useNavigate();
+  const [verifyOtp, { isLoading }] = useVerifyOtpMutation();
 
   const handleChange = (e) => {
     setOtp(e.target.value);
@@ -14,23 +15,11 @@ const OtpInput = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const response = await fetch(`${BASE_URL}/auth/verify-otp`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ otp }),
-        credentials: "include",
-      });
-      const data = await response.json();
-      if (response.ok) {
-        alert("Registration successful!");
-        navigate("/login");
-      } else {
-        alert(data.message || "OTP verification failed");
-      }
-    } catch (error) {
-      console.error("Error during OTP verification:", error);
+      await verifyOtp({ otp }).unwrap();
+      alert("Registration successful!");
+      navigate("/login");
+    } catch (err) {
+      alert(err.data.message || "OTP verification failed");
     }
   };
 
@@ -51,7 +40,7 @@ const OtpInput = () => {
               maxLength="6"
               className="text-center fs-4 border rounded mb-4"
             />
-            <Button type="submit" className="mt-4 w-100 btn btn-success">
+            <Button type="submit" className="mt-4 w-100 btn btn-success" disabled={isLoading}>
               Verify & Register
             </Button>
           </Form>

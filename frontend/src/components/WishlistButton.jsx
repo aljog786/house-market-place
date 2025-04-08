@@ -1,47 +1,31 @@
-import { useState, useEffect } from 'react';
-import axios from 'axios';
-import { BASE_URL } from '../constants';
-import { useDispatch, useSelector } from 'react-redux';
-import { toggleFavorite } from '../slices/authSlice';
+import { useSelector } from 'react-redux';
 import { FaHeart } from 'react-icons/fa';
 import { Button } from 'react-bootstrap';
+import {
+  useGetUserFavoritesQuery,
+  useAddFavoriteMutation,
+  useRemoveFavoriteMutation
+} from '../slices/usersApiSlice';
 
 const WishlistButton = ({ id }) => {
-  const dispatch = useDispatch();
-  const [favoritesList, setFavoritesList] = useState([]);
   const { userInfo } = useSelector((state) => state.auth);
+  const userId = userInfo?._id;
 
-  useEffect(() => {
-    const fetchFavorites = async () => {
-      if (!userInfo?._id) {
-        setFavoritesList([]);
-        return;
-      }
+  const { data: favoritesData, refetch } = useGetUserFavoritesQuery(userId, { skip: !userId });
+  const favoritesList = favoritesData ? favoritesData.map((building) => building._id) : [];
 
-      try {
-        const { data } = await axios.get(`${BASE_URL}/users/${userInfo._id}/favorites`, {
-          withCredentials: true,
-        });
-        setFavoritesList(data.map((building) => building._id));
-      } catch (error) {
-        console.error("Error fetching favorite buildings:", error);
-      }
-    };
-
-    fetchFavorites();
-  }, [userInfo]);
+  const [addFavorite] = useAddFavoriteMutation();
+  const [removeFavorite] = useRemoveFavoriteMutation();
 
   const handleFavoriteToggle = async () => {
-    dispatch(toggleFavorite(id));
+    if (!userId) return;
 
-    try {
-      const { data } = await axios.get(`${BASE_URL}/users/${userInfo._id}/favorites`, {
-        withCredentials: true,
-      });
-      setFavoritesList(data.map((building) => building._id));
-    } catch (error) {
-      console.error("Error fetching updated favorites:", error);
+    if (favoritesList.includes(id)) {
+      await removeFavorite({ userId, buildingId: id });
+    } else {
+      await addFavorite({ userId, buildingId: id });
     }
+    refetch();
   };
 
   const isFavorite = favoritesList.includes(id);
@@ -52,7 +36,7 @@ const WishlistButton = ({ id }) => {
       className="position-absolute top-0 z-3 end-0 m-2 p-2 border-0 rounded-circle"
       onClick={handleFavoriteToggle}
     >
-      <FaHeart size={20} className={isFavorite ? "text-danger" : "text-secondary"} />
+      <FaHeart size={20} className={isFavorite ? 'text-danger' : 'text-secondary'} />
     </Button>
   );
 };

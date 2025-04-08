@@ -1,38 +1,33 @@
-import { useEffect, useState } from "react";
-import { useParams,useNavigate } from "react-router-dom";
-import { useSelector } from "react-redux";
-import axios from "axios";
-import { Container, Row, Col, Card, Button, Spinner, Carousel, Badge } from "react-bootstrap";
-import { FaBed, FaBath, FaCar, FaCouch, FaMapMarkerAlt, FaPhone, FaShoppingCart } from "react-icons/fa";
-import WishlistButton from "../components/WishlistButton";
-import { useAddToCartMutation } from '../slices/usersApiSlice';
+import { useParams, useNavigate } from 'react-router-dom';
+import { Container, Row, Col, Card, Button, Spinner, Carousel, Badge } from 'react-bootstrap';
+import { FaBed, FaBath, FaCar, FaCouch, FaMapMarkerAlt, FaShoppingCart } from 'react-icons/fa';
+import { useSelector } from 'react-redux';
+import WishlistButton from '../components/WishlistButton';
+import { useGetBuildingDetailsQuery } from '../slices/buildingsApiSlice';
+import { useAddToCartMutation, useGetUserDetailsQuery } from '../slices/usersApiSlice';
+import { useCreateOrGetChatMutation } from '../slices/chatsApiSlice';
 
 const BuildingDetails = () => {
-const navigate = useNavigate();
   const { id } = useParams();
-  const [building, setBuilding] = useState(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const fetchBuildingDetails = async () => {
-      try {
-        const response = await axios.get(`http://localhost:8000/buildings/${id}`);
-        setBuilding(response.data);
-        setLoading(false);
-      } catch (error) {
-        console.error("Error fetching building details:", error);
-        setLoading(false);
-      }
-    };
-
-    fetchBuildingDetails();
-  }, [id]);
-
+  const navigate = useNavigate();
+  const { data: building, error, isLoading } = useGetBuildingDetailsQuery(id);
   const userId = useSelector((state) => state.auth.userInfo?._id);
   const [addToCart] = useAddToCartMutation();
+  const [createOrGetChat] = useCreateOrGetChatMutation();
+
+  const userIdForQuery =
+    building?.userRef && typeof building.userRef === 'object'
+      ? building.userRef._id
+      : building?.userRef;
+
+  const { data: owner } = useGetUserDetailsQuery(userIdForQuery, {
+    skip: !userIdForQuery,
+  });
+
   const handleBuyNow = async () => {
     if (!userId) {
       console.error('User not logged in');
+      navigate('/login');
       return;
     }
     try {
@@ -42,8 +37,30 @@ const navigate = useNavigate();
       console.error('Failed to add to cart', error);
     }
   };
-  
-  if (loading) {
+
+  const handleSendInquiry = async () => {
+    if (!userId) {
+      navigate('/login');
+      return;
+    }
+
+    try {
+      const chat = await createOrGetChat({
+        buildingId: building._id,
+        currentUserId: userId,
+        ownerId: userIdForQuery,
+      }).unwrap();
+      navigate('/profile/chats', {
+        state: {
+          chat
+        },
+      });
+    } catch (err) {
+      console.error('Error creating/fetching chat:', err);
+    }
+  };
+
+  if (isLoading) {
     return (
       <Container className="text-center mt-5">
         <Spinner animation="border" role="status">
@@ -53,18 +70,13 @@ const navigate = useNavigate();
     );
   }
 
-  if (!building) {
+  if (error || !building) {
     return (
       <Container className="text-center mt-5">
         <h4>Building not found.</h4>
       </Container>
     );
   }
-
-  const handleSendInquiry = () => {
-    if (!building) return;
-    navigate('/profile/chats', { state: { building } });
-  };
 
   return (
     <Container className="my-5">
@@ -77,7 +89,7 @@ const navigate = useNavigate();
                 className="d-block w-100 rounded"
                 src={url}
                 alt={`Building ${index + 1}`}
-                style={{ maxHeight: "500px", objectFit: "cover" }}
+                style={{ maxHeight: '500px', objectFit: 'cover' }}
               />
             </Carousel.Item>
           ))}
@@ -89,22 +101,36 @@ const navigate = useNavigate();
           <Card className="shadow-lg p-4 border-0 rounded-4 glass-effect">
             <Card.Body>
               <h2 className="fw-bold text-primary">{building.name}</h2>
-              <p className="text-muted"><FaMapMarkerAlt className="text-danger me-2" /> {building.address}</p>
+              <p className="text-muted">
+                <FaMapMarkerAlt className="text-danger me-2" /> {building.address}
+              </p>
 
               <h4 className="text-success fw-bold">
-                ₹{building.offer ? building.discountedPrice : building.regularPrice}
-                {building.type === "rent" && " / Month"}
+                ₹
+                {building.offer
+                  ? building.discountedPrice
+                  : building.regularPrice}
+                {building.type === 'rent' && ' / Month'}
               </h4>
 
               {building.offer && (
                 <p className="text-danger fw-semibold">
-                  Discounted from: <span className="text-decoration-line-through">₹{building.regularPrice}</span>
+                  Discounted from:{' '}
+                  <span className="text-decoration-line-through">
+                    ₹{building.regularPrice}
+                  </span>
                 </p>
               )}
 
               <div className="mb-3">
-                <Badge bg="info" className="me-2">{building.type === "rent" ? "For Rent" : "For Sale"}</Badge>
-                {building.furnished && <Badge bg="secondary" className="me-2">Furnished</Badge>}
+                <Badge bg="info" className="me-2">
+                  {building.type === 'rent' ? 'For Rent' : 'For Sale'}
+                </Badge>
+                {building.furnished && (
+                  <Badge bg="secondary" className="me-2">
+                    Furnished
+                  </Badge>
+                )}
                 {building.parking && <Badge bg="dark">Parking Available</Badge>}
               </div>
 
@@ -119,16 +145,20 @@ const navigate = useNavigate();
                 </Col>
                 <Col xs={6} md={3}>
                   <FaCar size={30} className="text-warning mb-2" />
-                  <p className="mb-0">{building.parking ? "Parking Available" : "No Parking"}</p>
+                  <p className="mb-0">
+                    {building.parking ? 'Parking Available' : 'No Parking'}
+                  </p>
                 </Col>
                 <Col xs={6} md={3}>
                   <FaCouch size={30} className="text-success mb-2" />
-                  <p className="mb-0">{building.furnished ? "Furnished" : "Unfurnished"}</p>
+                  <p className="mb-0">
+                    {building.furnished ? 'Furnished' : 'Unfurnished'}
+                  </p>
                 </Col>
               </Row>
 
-              <Button 
-                variant="danger" 
+              <Button
+                variant="danger"
                 className="mt-4 w-100 fw-bold"
                 onClick={handleBuyNow}
               >
@@ -142,11 +172,14 @@ const navigate = useNavigate();
           <Card className="shadow-lg p-4 border-0 text-center rounded-4 bg-light">
             <Card.Body>
               <h5 className="fw-bold">Interested in this property?</h5>
-              <p className="text-muted">Contact the owner for more details</p>
-              <Button variant="primary" className="w-100 mb-2">
-                <FaPhone className="me-2" /> Call Now
-              </Button>
-              <Button variant="outline-primary" className="w-100" onClick={handleSendInquiry}>
+              <p className="text-muted">
+                Contact {owner?.name} for more details
+              </p>
+              <Button
+                variant="outline-primary"
+                className="w-100"
+                onClick={handleSendInquiry}
+              >
                 Send Inquiry
               </Button>
             </Card.Body>

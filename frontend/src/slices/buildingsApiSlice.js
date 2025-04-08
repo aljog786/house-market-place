@@ -10,14 +10,11 @@ export const buildingsApiSlice = apiSlice.injectEndpoints({
             providesTags: ['Building'],
         }),
 
-        // Fetch a single building by ID
         getBuildingDetails: builder.query({
             query: (id) => ({
                 url: `${BUILDINGS_URL}/${id}`
             })
         }),
-
-        // Create a new building
 createBuilding: builder.mutation({
     query: (buildingData) => ({
         url: `${BUILDINGS_URL}`,
@@ -29,7 +26,6 @@ createBuilding: builder.mutation({
     }),
     invalidatesTags: ['Building']
   }),
-  // Upload building image
   uploadBuildingImage: builder.mutation({
     query: (formData) => ({
         url: `${UPLOAD_URL}`,
@@ -38,7 +34,6 @@ createBuilding: builder.mutation({
         credentials: 'include'   
      })
 }),
-        // Update a building by ID
         updateBuilding: builder.mutation({
             query: ({ id, ...buildingData }) => ({
                 url: `${BUILDINGS_URL}/${id}`,
@@ -47,8 +42,6 @@ createBuilding: builder.mutation({
             }),
             invalidatesTags: (result, error, { id }) => [{ type: 'Building', id }],
         }),
-
-        // Delete a building by ID
         deleteBuilding: builder.mutation({
             query: (id) => ({
                 url: `${BUILDINGS_URL}/${id}`,

@@ -7,26 +7,27 @@ import { BiSolidMessageDetail } from "react-icons/bi";
 import { LuCirclePower } from "react-icons/lu";
 import { logout } from "../slices/authSlice";
 import logo from "../assets/png/Logo.png";
-import { useGetUserFavoritesQuery } from "../slices/usersApiSlice";  // Import API hook
+import { useGetUserFavoritesQuery,useGetUserCartQuery } from "../slices/usersApiSlice";  // Import API hook
 
 const Header = () => {
   const { userInfo } = useSelector((state) => state.auth);
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
-  // Fetch user favorites using API slice
   const { data: favorites, isLoading, isError } = useGetUserFavoritesQuery(userInfo?._id, {
     skip: !userInfo, // Skip query if user is not logged in
   });
-
   const favoritesCount = favorites?.length || 0;
+
+  const { data: cart, isLoading: isCartLoading, isError: isCartError } = useGetUserCartQuery(userInfo?._id, {
+    skip: !userInfo,
+  });
+  const cartCount = cart?.length || 0;
 
   const handleLogout = () => {
     dispatch(logout());
     navigate("/login");
   };
-
-  const cartItems = useSelector((state) => state.cart.cartItems);
 
   return (
     <Container className="d-flex justify-content-between p-3">
@@ -41,7 +42,7 @@ const Header = () => {
             <BiSolidMessageDetail className="text-info" size={24} />
             {!isLoading && !isError && favoritesCount > 0 && (
               <Badge pill bg="warning" className="position-absolute" style={{ top: "-8px", right: "-8px", fontSize: "0.7rem" }}>
-                {cartItems.length}
+                {cartCount}
               </Badge>
             )}
           </div>
@@ -49,7 +50,7 @@ const Header = () => {
             <FaCartShopping className="text-secondary" size={24} />
             {!isLoading && !isError && favoritesCount > 0 && (
               <Badge pill bg="warning" className="position-absolute" style={{ top: "-8px", right: "-8px", fontSize: "0.7rem" }}>
-                {cartItems.length}
+                {cartCount}
               </Badge>
             )}
           </div>

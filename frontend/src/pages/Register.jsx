@@ -3,7 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { Container, Row, Col, Form, Button, InputGroup, Card } from "react-bootstrap";
 import { FaEnvelope, FaLock, FaEye, FaEyeSlash } from "react-icons/fa";
 import { CgProfile } from "react-icons/cg";
-import { BASE_URL } from "../constants";
+import { useRegisterUserMutation } from "../slices/otpApiSlice";
 
 const Register = () => {
   const [showPassword, setShowPassword] = useState(false);
@@ -13,9 +13,10 @@ const Register = () => {
     password: '',
     cnfPassword: ''
   });
-
   const { name, email, password, cnfPassword } = formData;
   const navigate = useNavigate();
+  
+  const [registerUser, { isLoading }] = useRegisterUserMutation();
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -30,26 +31,12 @@ const Register = () => {
     }
   
     try {
-      const response = await fetch(`${BASE_URL}/auth/register`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ name, email, password }),
-        credentials: "include", // include cookies
-      });
-  
-      const data = await response.json();
-  
-      if (response.ok) {
-        alert("OTP sent to your email!");
-        // Navigate to OTP verification page
-        navigate("/register/otp");
-      } else {
-        alert(data.message || "Failed to send OTP");
-      }
-    } catch (error) {
-      console.error("Error sending OTP:", error);
+      await registerUser({ name, email, password }).unwrap();
+      alert("OTP sent to your email!");
+      // Navigate to OTP verification page
+      navigate("/register/otp");
+    } catch (err) {
+      alert(err.data.message || "Failed to send OTP");
     }
   };
 
@@ -65,7 +52,6 @@ const Register = () => {
             </Card.Header>
             <Card.Body className="px-4 py-5">
               <Form onSubmit={handleSubmit}>
-                {/* Name Input */}
                 <Form.Group className="mb-4" controlId="formName">
                   <Form.Label className="fw-semibold text-secondary">Full Name</Form.Label>
                   <InputGroup className="mb-1">
@@ -83,7 +69,6 @@ const Register = () => {
                     />
                   </InputGroup>
                 </Form.Group>
-                {/* Email Input */}
                 <Form.Group className="mb-4" controlId="formEmail">
                   <Form.Label className="fw-semibold text-secondary">Email Address</Form.Label>
                   <InputGroup className="mb-1">
@@ -101,7 +86,6 @@ const Register = () => {
                     />
                   </InputGroup>
                 </Form.Group>
-                {/* Password Input */}
                 <Form.Group className="mb-4" controlId="formPassword">
                   <Form.Label className="fw-semibold text-secondary">Password</Form.Label>
                   <InputGroup className="mb-1">
@@ -130,7 +114,6 @@ const Register = () => {
                     Password must be at least 6 characters long
                   </Form.Text>
                 </Form.Group>
-                {/* Confirm Password Input */}
                 <Form.Group className="mb-4" controlId="formPasswordConfirm">
                   <Form.Label className="fw-semibold text-secondary">Confirm Password</Form.Label>
                   <InputGroup className="mb-1">
@@ -159,7 +142,6 @@ const Register = () => {
                     {password === cnfPassword ? "Password matches" : "Password does not match"}
                   </Form.Text>
                 </Form.Group>
-                {/* Submit Button */}
                 <Button
                   variant="success"
                   type="submit"
@@ -168,6 +150,7 @@ const Register = () => {
                     transition: "all 0.3s ease-in-out",
                     boxShadow: "0 4px 6px rgba(50, 50, 93, 0.11), 0 1px 3px rgba(0, 0, 0, 0.08)"
                   }}
+                  disabled={isLoading}
                 >
                   <span>Send OTP</span>
                 </Button>

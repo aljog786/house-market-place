@@ -69,36 +69,32 @@ const io = new Server(server, {
 
 io.on('connection', (socket) => {
   console.log('User connected:', socket.id);
-  
-  socket.on('joinRoom', async (room) => {
-    socket.join(room);
-    console.log(`User ${socket.id} joined room ${room}`);
-  
+  socket.on('joinRoom', async (chatId) => {
+    socket.join(chatId);
+    console.log(`User ${socket.id} joined room ${chatId}`);
+
     try {
-      const chat = await Chat.findOne({ building: room })
+      const chat = await Chat.findById(chatId)
         .populate('messages.sender', 'name')
         .populate('messages.receiver', 'name');
-  
+
       socket.emit('previousMessages', chat ? chat.messages : []);
     } catch (error) {
       console.error('Error fetching chat history:', error);
     }
   });
-  
+
   socket.on('sendMessage', async (data) => {
-    const { sender, receiver, text } = data;
+    const { sender, receiver, text, chatId } = data;  // We'll pass chatId from front-end
     try {
-      // Find an existing chat where both sender and receiver are participants
-      let chat = await Chat.findOne({
-        participants: { $all: [sender, receiver] }
-      });
-  
-      // Create a new chat if none exists
+      let chat = await Chat.findById(chatId);
       if (!chat) {
-        chat = new Chat({ participants: [sender, receiver] });
+        chat = new Chat({ 
+          building: data.buildingId, 
+          participants: [sender, receiver] 
+        });
       }
-      
-      // Push the new message to the messages array
+
       const newMessage = {
         sender,
         receiver,
@@ -106,18 +102,18 @@ io.on('connection', (socket) => {
         time: new Date(),
       };
       chat.messages.push(newMessage);
-      
-      // Save the updated chat document to MongoDB
+
       await chat.save();
-      
-      // Emit the new message to the connected clients (if needed)
-      io.to(data.room).emit('message', data);
+
+      io.to(chatId).emit('message', {
+        ...data,
+        time: newMessage.time 
+      });
     } catch (error) {
       console.error('Error saving message:', error);
     }
   });
-  
-  
+
   socket.on('disconnect', () => {
     console.log('User disconnected:', socket.id);
   });

@@ -1,50 +1,34 @@
-import { useState, useEffect } from "react";
-import axios from "axios";
-import ReactLoading from "react-loading";
 import { Row, Container } from "react-bootstrap";
 import BuildingItem from "../components/BuildingItem";
+import { useGetBuildingsQuery } from "../slices/buildingsApiSlice";
+import ReactLoading from "react-loading";
 
 const Offers = () => {
-  const [buildings, setBuildings] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const { data: buildingsData = [], isLoading, isError, error } = useGetBuildingsQuery();
 
-  useEffect(() => {
-    const fetchBuildings = async () => {
-      try {
-        const response = await axios.get("http://localhost:8000/buildings");
-        const filteredBuildings = response.data.filter(
-          (building) => building.offer === true
-        );
-        setBuildings(filteredBuildings);
-        setLoading(false);
-      } catch (error) {
-        console.error("Error fetching buildings:", error);
-        setLoading(false);
-      }
-    };
-
-    fetchBuildings();
-  }, []);
+  const offerBuildings = buildingsData.filter((building) => building.offer === true);
 
   return (
     <Container>
       <h2 className="mb-4 mt-4">Offers</h2>
-      {loading ? (
-        <ReactLoading type="Bars" color="#444" />
+      {isLoading ? (
+        <div className="d-flex justify-content-center">
+          <ReactLoading type="Bars" color="#444" />
+        </div>
+      ) : isError ? (
+        <p>Error: {error?.data?.message || error.error}</p>
+      ) : offerBuildings.length > 0 ? (
+        <Row>
+          {offerBuildings.map((building) => (
+            <BuildingItem
+              building={building}
+              id={building._id}  // Ensure you're using _id here
+              key={building._id}
+            />
+          ))}
+        </Row>
       ) : (
-        buildings.length > 0 ? (
-          <Row>
-            {buildings.map((building) => (
-              <BuildingItem
-                building={building}
-                id={building._id}  // Ensure you're using _id here
-                key={building._id}
-              />
-            ))}
-          </Row>
-        ) : (
-          <p>No current offers.</p>
-        )
+        <p>No current offers.</p>
       )}
     </Container>
   );

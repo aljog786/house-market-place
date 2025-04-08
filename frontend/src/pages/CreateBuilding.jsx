@@ -231,7 +231,7 @@ const CreateBuilding = () => {
                           onChange={(e) => handleInputChange('offer', e.target.checked)}
                         />
                         {formData.offer && (
-                          <FloatingLabel label="Discounted Price ($)">
+                          <FloatingLabel label="Discounted Price (₹)">
                             <Form.Control
                               type="number"
                               value={formData.discountedPrice}

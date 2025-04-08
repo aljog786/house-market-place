@@ -1,65 +1,73 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Container, Row, Col, Card, ListGroup, Form, Button, Image } from 'react-bootstrap';
 import { FaPaperPlane } from 'react-icons/fa';
 import { useGetChatsQuery } from '../slices/chatsApiSlice';
 import { useSelector } from 'react-redux';
+import { useLocation } from 'react-router-dom';
 import io from 'socket.io-client';
 import { BASE_URL } from '../constants';
 
 const socket = io(BASE_URL);
 
 const Chats = () => {
+  const location = useLocation();
+  const { chat: incomingChat } = location.state || {}; 
   const { data: chats = [], isLoading, error } = useGetChatsQuery();
   const { userInfo } = useSelector((state) => state.auth);
-
   const [selectedChat, setSelectedChat] = useState(null);
   const [newMessage, setNewMessage] = useState('');
   const [messages, setMessages] = useState([]);
-
   useEffect(() => {
-    if (selectedChat) {
-      const filteredMessages = selectedChat.messages.filter(
-        (msg) => msg.sender._id === userInfo._id || msg.receiver._id === userInfo._id
-      );
-      setMessages(filteredMessages);
-      socket.emit('joinRoom', selectedChat._id);
-  
-      socket.on('message', (message) => {
-        if (message.room === selectedChat._id) {
-          setMessages((prev) => [...prev, message]);
-        }
-      });
+    if (!isLoading && incomingChat) {
+      const found = chats.find((c) => c._id === incomingChat._id);
+      if (found) {
+        setSelectedChat(found);
+        setMessages(found.messages);
+      } else {
+        setSelectedChat(incomingChat);
+        setMessages(incomingChat.messages || []);
+      }
     }
-    return () => {
-      socket.off('message');
-    };
-  }, [selectedChat, userInfo._id]);  
+  }, [incomingChat, chats, isLoading]);
 
   const handleSelectChat = (chat) => {
     setSelectedChat(chat);
     setMessages(chat.messages);
   };
 
+  useEffect(() => {
+    if (selectedChat) {
+      socket.emit('joinRoom', selectedChat._id);
+
+      socket.on('message', (message) => {
+        if (message.chatId === selectedChat._id) {
+          setMessages((prev) => [...prev, message]);
+        }
+      });
+
+      socket.on('previousMessages', (msgs) => {
+        setMessages(msgs);
+      });
+    }
+    return () => {
+      socket.off('message');
+      socket.off('previousMessages');
+    };
+  }, [selectedChat]);
+
   const handleSendMessage = (e) => {
     e.preventDefault();
     if (!newMessage.trim() || !selectedChat) return;
 
     const message = {
+      chatId: selectedChat._id,
       sender: userInfo._id,
-      receiver:
-        selectedChat.messages.length > 0
-          ? selectedChat.messages[0].sender._id === userInfo._id
-            ? selectedChat.messages[0].receiver
-            : selectedChat.messages[0].sender
-          : { name: 'Other User' },
+      receiver: selectedChat.participants.find((p) => p._id !== userInfo._id)?._id,
       text: newMessage,
-      time: new Date().toISOString(),
-      room: selectedChat._id,
+      time: new Date().toISOString()
     };
-
-    setMessages([...messages, message]);
+    setMessages([...messages, { ...message, sender: { _id: userInfo._id, name: 'You' } }]);
     setNewMessage('');
-
     socket.emit('sendMessage', message);
   };
 
@@ -68,10 +76,8 @@ const Chats = () => {
 
   const chatList = chats.map((chat) => {
     const lastMsg = chat.messages[chat.messages.length - 1];
-    const otherName =
-      lastMsg && lastMsg.sender._id === userInfo._id
-        ? lastMsg.receiver.name
-        : lastMsg.sender.name;
+    const otherParticipant = chat.participants.find((p) => p._id !== userInfo._id);
+    const otherName = otherParticipant?.name || 'Unknown';
     return {
       id: chat._id,
       name: otherName,
@@ -131,14 +137,17 @@ const Chats = () => {
                   />
                   <div className="d-flex flex-column">
                     <strong>
-                      {selectedChat.messages.length > 0 &&
-                      selectedChat.messages[0].sender._id === userInfo._id
-                        ? selectedChat.messages[0].receiver.name
-                        : selectedChat.messages[0].sender.name}
+                      {selectedChat.participants
+                        .filter((p) => p._id !== userInfo._id)
+                        .map((p) => p.name)
+                        .join(', ') || 'No other user'}
                     </strong>
-                    <small className="text-muted">
-                      {selectedChat.building?.name} - ₹{selectedChat.building?.regularPrice}
-                    </small>
+                    {selectedChat.building && (
+                      <small className="text-muted">
+                        {selectedChat.building.name} - ₹
+                        {selectedChat.building.regularPrice}
+                      </small>
+                    )}
                   </div>
                 </Card.Header>
               </Card>
@@ -149,19 +158,30 @@ const Chats = () => {
               >
                 <ListGroup variant="flush">
                   {messages.map((msg, index) => {
-                    const isSender = msg.sender._id === userInfo._id;
+                    const senderId =
+                      typeof msg.sender === 'object' ? msg.sender._id : msg.sender;
+                    const isSender = senderId === userInfo._id;
+                    const senderName =
+                      typeof msg.sender === 'object'
+                        ? msg.sender.name
+                        : 'Other User';
+
                     return (
                       <ListGroup.Item
                         key={index}
-                        className={`d-flex ${isSender ? 'justify-content-end' : 'justify-content-start'}`}
+                        className={`d-flex ${
+                          isSender ? 'justify-content-end' : 'justify-content-start'
+                        }`}
                         style={{ border: 'none', backgroundColor: 'transparent' }}
                       >
                         <div className="d-flex flex-column">
                           <small className="text-muted" style={{ fontSize: '0.8em' }}>
-                            {isSender ? 'You' : msg.sender.name}
+                            {isSender ? 'You' : senderName}
                           </small>
                           <div
-                            className={`p-2 rounded ${isSender ? 'bg-primary text-white' : 'bg-light text-dark'}`}
+                            className={`p-2 rounded ${
+                              isSender ? 'bg-primary text-white' : 'bg-light text-dark'
+                            }`}
                             style={{ maxWidth: '100%' }}
                           >
                             {msg.text}

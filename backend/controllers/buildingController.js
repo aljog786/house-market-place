@@ -11,7 +11,7 @@ export const getAllBuildings = asyncHandler(async (req, res, next) => {
 });
 
 export const getBuildingById = asyncHandler(async (req, res) => {
-    const building = await Building.findById(req.params.id);
+    const building = await Building.findById(req.params.id).populate('userRef');
 
     if (building) {
         return res.json(building);
