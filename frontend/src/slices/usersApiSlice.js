@@ -44,6 +44,14 @@ export const usersApiSlice = apiSlice.injectEndpoints({
         credentials: 'include',
       }),
     }),
+    getUserAvatar: builder.query({
+      query: (userId) => ({
+        url: `${USERS_URL}/${userId}/avatar`,
+        method: "GET",
+        credentials: "include",
+      }),
+      providesTags: ['UserAvatar'],
+    }),
     updateProfile: builder.mutation({
       query: (data) => ({
         url: `${USERS_URL}/profile`,
@@ -103,6 +111,7 @@ export const usersApiSlice = apiSlice.injectEndpoints({
 });
 
 export const {
+  useGetUserAvatarQuery,
   useGetUserDetailsQuery,
   useGetAllUsersQuery,
   useLoginMutation,

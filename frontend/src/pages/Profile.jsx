@@ -1,30 +1,44 @@
 import { useState, useEffect } from 'react';
 import { useSelector } from 'react-redux';
 import { Link, useNavigate } from 'react-router-dom';
-import { Row, Col, Container, Card, Badge, Nav, Image } from 'react-bootstrap';
-import { FaUserEdit } from "react-icons/fa";
-import { FaCircleChevronRight } from "react-icons/fa6";
-import { MdOutlineAddHomeWork } from "react-icons/md";
-import { GoHomeFill } from "react-icons/go";
-import { MdFavorite } from "react-icons/md";
+import {
+  Row,
+  Col,
+  Container,
+  Card,
+  Badge,
+  Nav,
+  Image
+} from 'react-bootstrap';
+import { FaUserEdit } from 'react-icons/fa';
+import { FaCircleChevronRight } from 'react-icons/fa6';
+import { MdOutlineAddHomeWork } from 'react-icons/md';
+import { GoHomeFill } from 'react-icons/go';
+import { MdFavorite } from 'react-icons/md';
 import { useGetUserFavoritesQuery } from '../slices/usersApiSlice';
 import { useGetBuildingsQuery } from '../slices/buildingsApiSlice';
+import { useGetUserAvatarQuery } from '../slices/usersApiSlice'; // <-- Import new hook
 import Header from '../components/Header';
+import ProfilePictureUpload from '../components/ProfilePictureUpload';
 
 const Profile = () => {
   const [windowWidth, setWindowWidth] = useState(window.innerWidth);
+  const [showPicOptions, setShowPicOptions] = useState(false); // controls modal visibility
   const { userInfo } = useSelector((state) => state.auth);
   const navigate = useNavigate();
 
-  const { data: favorites = [] } =
-  useGetUserFavoritesQuery(userInfo?._id, { skip: !userInfo });
+  // Use the new hook to fetch the avatar from the API
+  const { data: avatarData } = useGetUserAvatarQuery(userInfo?._id, { skip: !userInfo });
+  const avatarUrl = avatarData?.avatar || (userInfo?.avatar 
+    ? userInfo.avatar 
+    : `https://ui-avatars.com/api/?name=${encodeURIComponent(userInfo?.name)}&background=random`);
 
-  const { data: buildings = [] } =
-  useGetBuildingsQuery(undefined, { 
+  const { data: favorites = [] } = useGetUserFavoritesQuery(userInfo?._id, { skip: !userInfo });
+  const { data: buildings = [] } = useGetBuildingsQuery(undefined, {
     selectFromResult: ({ data }) => ({
-      data: data?.filter(b => b.userRef._id === userInfo?._id) || []
+      data: data?.filter((b) => b.userRef._id === userInfo?._id) || []
     }),
-    skip: !userInfo 
+    skip: !userInfo
   });
 
   useEffect(() => {
@@ -39,48 +53,63 @@ const Profile = () => {
   }
 
   const menuItems = [
-    { 
-      title: 'Sell / Rent Property', 
-      icon: <MdOutlineAddHomeWork size={23} className="text-primary" />, 
+    {
+      title: 'Sell / Rent Property',
+      icon: <MdOutlineAddHomeWork size={23} className="text-primary" />,
       path: '/profile/create-building',
       badge: 'New'
     },
-    { 
-      title: 'My Favorites', 
-      icon: <MdFavorite size={23} className="text-danger" />, 
-      path: '/profile/favorites' 
+    {
+      title: 'My Favorites',
+      icon: <MdFavorite size={23} className="text-danger" />,
+      path: '/profile/favorites'
     },
-    { 
-      title: 'My Properties', 
-      icon: <GoHomeFill size={23} className="text-secondary" />, 
-      path: '/profile/properties' 
+    {
+      title: 'My Properties',
+      icon: <GoHomeFill size={23} className="text-secondary" />,
+      path: '/profile/properties'
     }
   ];
 
+  // Callback to update UI (if needed) after a successful upload.
+  const handleUploadSuccess = (data) => {
+    console.log('Upload succeeded:', data);
+    // You may update the Redux store or trigger a re-fetch if needed.
+  };
+
   return (
     <div className="profile-page bg-light min-vh-100">
-    <Header />
+      <Header />
       <Container className="py-3">
-        <Card className="profile-card border-0 shadow-sm mb-4 overflow-hidden" style={{ 
-          borderRadius: '16px', 
-          transition: 'all 0.3s ease',
-        }}>
+        <Card
+          className="profile-card border-0 shadow-sm mb-4 overflow-hidden"
+          style={{ borderRadius: '16px', transition: 'all 0.3s ease' }}
+        >
           <Card.Body className="p-0">
             <Row className="g-0">
-              <Col md={4} className="profile-bg d-flex align-items-center justify-content-center py-4" style={{ 
-                background: 'linear-gradient(45deg, #f3f4f6 0%, #e5e7eb 100%)',
-              }}>
+              {/* Left Column with Profile Picture */}
+              <Col
+                md={4}
+                className="profile-bg d-flex align-items-center justify-content-center py-4"
+                style={{ background: 'linear-gradient(45deg, #f3f4f6 0%, #e5e7eb 100%)' }}
+              >
                 <div className="text-center">
-                  <div className="mb-3 position-relative mx-auto" style={{ width: '120px', height: '120px' }}>
-                    <Image 
-                      src={userInfo?.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(userInfo?.name)}&background=random`} 
-                      roundedCircle 
-                      className="border border-4 border-white shadow-sm" 
-                      style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                  <div
+                    className="mb-3 position-relative mx-auto"
+                    style={{ width: '120px', height: '120px' }}
+                  >
+                    <Image
+                      src={avatarUrl}
+                      roundedCircle
+                      className="border border-4 border-white shadow-sm"
+                      style={{ width: '100%', height: '100%', objectFit: 'cover', cursor: 'pointer' }}
+                      onClick={() => setShowPicOptions(true)}
                     />
                   </div>
                 </div>
               </Col>
+
+              {/* Right Column with User Info */}
               <Col md={8}>
                 <div className="p-4">
                   <div className="d-flex justify-content-between align-items-center mb-3">
@@ -114,18 +143,19 @@ const Profile = () => {
           </Card.Body>
         </Card>
 
+        {/* Quick Actions */}
         <div className="menu-cards mb-4">
           <h5 className="fw-bold mb-3">Quick Actions</h5>
           <Row xs={1} md={2} lg={3} className="g-3">
             {menuItems.map((item, index) => (
               <Col key={index}>
                 <Link to={item.path} className="text-decoration-none">
-                  <Card 
-                    className="border-0 h-100 menu-card" 
-                    style={{ 
-                      borderRadius: '12px', 
+                  <Card
+                    className="border-0 h-100 menu-card"
+                    style={{
+                      borderRadius: '12px',
                       boxShadow: '0 4px 12px rgba(0,0,0,0.05)',
-                      transition: 'transform 0.3s ease, box-shadow 0.3s ease',
+                      transition: 'transform 0.3s ease, box-shadow 0.3s ease'
                     }}
                   >
                     <Card.Body className="d-flex align-items-center p-4">
@@ -149,6 +179,7 @@ const Profile = () => {
           </Row>
         </div>
 
+        {/* Recent Activity */}
         <div className="mb-4">
           <h5 className="fw-bold mb-3">Recent Activity</h5>
           <Card className="border-0 shadow-sm" style={{ borderRadius: '12px' }}>
@@ -164,7 +195,7 @@ const Profile = () => {
                   <Nav.Link className="border-0 text-muted">Messages</Nav.Link>
                 </Nav.Item>
               </Nav>
-              
+
               <div className="p-3">
                 {[1, 2, 3].map((_, index) => (
                   <div key={index} className={`d-flex py-2 ${index !== 2 ? 'border-bottom' : ''}`}>
@@ -182,6 +213,13 @@ const Profile = () => {
           </Card>
         </div>
       </Container>
+
+      {/* Modal to Upload Profile Picture */}
+      <ProfilePictureUpload
+        show={showPicOptions}
+        handleClose={() => setShowPicOptions(false)}
+        onUploadSuccess={handleUploadSuccess}
+      />
     </div>
   );
 };

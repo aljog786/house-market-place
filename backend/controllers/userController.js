@@ -2,6 +2,100 @@ import asyncHandler from '../middleware/asyncHandler.js';
 import User from '../models/user.js';
 import jwt from 'jsonwebtoken';
 import mongoose from 'mongoose';
+import path from 'path';
+import multer from 'multer';
+
+const storage = multer.diskStorage({
+  destination(req, file, cb) {
+    cb(null, 'uploads/'); // Files will be saved to "uploads" folder.
+  },
+  filename(req, file, cb) {
+    // Prefix the file name with "profile" followed by a timestamp.
+    cb(null, `profile-${Date.now()}${path.extname(file.originalname)}`);
+  }
+});
+
+// File filter to allow only specific image types.
+function fileFilter(req, file, cb) {
+  const filetypes = /jpe?g|png|webp/;
+  const mimetypes = /image\/jpe?g|image\/png|image\/webp/;
+
+  const extname = filetypes.test(path.extname(file.originalname).toLowerCase());
+  const mimetype = mimetypes.test(file.mimetype);
+
+  if (extname && mimetype) {
+    cb(null, true);
+  } else {
+    cb(new Error('Images only!'), false);
+  }
+}
+
+// Create a multer instance with the defined storage and fileFilter.
+const upload = multer({ storage, fileFilter });
+
+const uploadProfilePicture = asyncHandler((req, res) => {
+  const uploadSingleImage = upload.single('profilePic');
+
+  uploadSingleImage(req, res, async function (err) {
+    if (err) {
+      return res.status(400).json({ message: err.message });
+    }
+    if (!req.file) {
+      return res.status(400).json({ message: 'No file uploaded' });
+    }
+
+    // 1. Find the user first
+    const user = await User.findById(req.user._id);
+    if (!user) {
+      // clean up the just-uploaded file if user not found
+      fs.unlinkSync(req.file.path);
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    // 2. If they already had an avatar, delete the old file
+    if (user.avatar) {
+      try {
+        // user.avatar is something like "http://host/uploads/profile-123.jpg"
+        const oldFilename = path.basename(user.avatar);
+        const oldFilePath = path.join('uploads', oldFilename);
+        if (fs.existsSync(oldFilePath)) {
+          fs.unlinkSync(oldFilePath);
+        }
+      } catch (unlinkErr) {
+        console.error('Failed to delete old avatar:', unlinkErr);
+        // not fatal—continue on
+      }
+    }
+
+    // 3. Build the new avatar URL and save it
+    const avatarUrl = `${req.protocol}://${req.get('host')}/uploads/${req.file.filename}`;
+    user.avatar = avatarUrl;
+    await user.save();
+
+    res.status(200).json({
+      message: 'Profile picture uploaded successfully',
+      avatar: avatarUrl,
+      user,
+    });
+  });
+});
+
+const getUserAvatar = asyncHandler(async (req, res) => {
+    const { id } = req.params;
+  
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      res.status(400);
+      throw new Error('Invalid user ID');
+    }
+  
+    const user = await User.findById(id);
+    if (user) {
+      res.json({ avatar: user.avatar });
+    } else {
+      res.status(404);
+      throw new Error('User not found');
+    }
+  });
 
 const registerUser = asyncHandler(async (req, res) => {
     const { name, email, password } = req.body;
@@ -16,7 +110,7 @@ const registerUser = asyncHandler(async (req, res) => {
     const user = await User.create({
         name,
         email,
-        password, // This will be hashed due to the pre-save middleware in the model
+        password
     });
 
     if (user) {
@@ -56,12 +150,11 @@ const authUser = asyncHandler(async (req,res) => {
             expiresIn: '30d',
         });
 
-        // Set token in cookie
         res.cookie('jwt', token, {
             httpOnly: true,
             secure: process.env.NODE_ENV === 'production',
             sameSite: 'lax',
-            maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
+            maxAge: 30 * 24 * 60 * 60 * 1000 
         });
 
         res.json({
@@ -69,7 +162,7 @@ const authUser = asyncHandler(async (req,res) => {
             name: user.name,
             email: user.email,
             isAdmin: user.isAdmin,
-            token, // optionally include the token
+            token
         }); 
     } else {
         res.status(401);
@@ -90,7 +183,6 @@ const authUser = asyncHandler(async (req,res) => {
     try {
         const { id } = req.params;
 
-        // Validate if `id` is a valid ObjectId
         if (!mongoose.Types.ObjectId.isValid(id)) {
             return res.status(400).json({ message: 'Invalid user ID' });
         }
@@ -258,4 +350,4 @@ const removeFromCart = asyncHandler(async (req, res) => {
 });
 
 
-export { getUserCart,addToCart,removeFromCart,registerUser, authUser, getAllUsers, getUserById, getUserProfile, updateUserProfile,logoutUser, getUserFavorites,addFavorite,removeFavorite };
+export { getUserCart,addToCart,getUserAvatar,removeFromCart,registerUser, authUser, getAllUsers, getUserById, getUserProfile, updateUserProfile,logoutUser, getUserFavorites,addFavorite,removeFavorite,uploadProfilePicture };
