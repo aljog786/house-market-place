@@ -30,7 +30,6 @@ function fileFilter(req, file, cb) {
   }
 }
 
-// Create a multer instance with the defined storage and fileFilter.
 const upload = multer({ storage, fileFilter });
 
 const uploadProfilePicture = asyncHandler((req, res) => {
@@ -44,18 +43,14 @@ const uploadProfilePicture = asyncHandler((req, res) => {
       return res.status(400).json({ message: 'No file uploaded' });
     }
 
-    // 1. Find the user first
     const user = await User.findById(req.user._id);
     if (!user) {
-      // clean up the just-uploaded file if user not found
       fs.unlinkSync(req.file.path);
       return res.status(404).json({ message: 'User not found' });
     }
 
-    // 2. If they already had an avatar, delete the old file
     if (user.avatar) {
       try {
-        // user.avatar is something like "http://host/uploads/profile-123.jpg"
         const oldFilename = path.basename(user.avatar);
         const oldFilePath = path.join('uploads', oldFilename);
         if (fs.existsSync(oldFilePath)) {
@@ -63,11 +58,9 @@ const uploadProfilePicture = asyncHandler((req, res) => {
         }
       } catch (unlinkErr) {
         console.error('Failed to delete old avatar:', unlinkErr);
-        // not fatal—continue on
       }
     }
 
-    // 3. Build the new avatar URL and save it
     const avatarUrl = `${req.protocol}://${req.get('host')}/uploads/${req.file.filename}`;
     user.avatar = avatarUrl;
     await user.save();

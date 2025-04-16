@@ -9,7 +9,7 @@ const Offers = () => {
   const offerBuildings = buildingsData.filter((building) => building.offer === true);
 
   return (
-    <Container>
+    <Container className="mb-5">
       <h2 className="mb-4 mt-4">Offers</h2>
       {isLoading ? (
         <div className="d-flex justify-content-center">
@@ -22,7 +22,7 @@ const Offers = () => {
           {offerBuildings.map((building) => (
             <BuildingItem
               building={building}
-              id={building._id}  // Ensure you're using _id here
+              id={building._id}
               key={building._id}
             />
           ))}

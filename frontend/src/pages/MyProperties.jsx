@@ -8,17 +8,21 @@ const MyProperties = () => {
   const { userInfo } = useSelector((state) => state.auth);
   const navigate = useNavigate();
 
-  const { data: buildingsData = [], isLoading, isError, error } = useGetBuildingsQuery();
+  const {
+    data: buildingsData = [],
+    isLoading,
+    isError,
+    error,
+  } = useGetBuildingsQuery();
 
   const myBuildings = userInfo
     ? buildingsData.filter(
-        (building) =>
-          building.userRef && building.userRef._id === userInfo._id
+        (building) => building.userRef && building.userRef._id === userInfo._id
       )
     : [];
 
   const handleAddProperty = () => {
-    navigate('/profile/create-building');
+    navigate("/profile/create-building");
   };
 
   return (
@@ -48,7 +52,7 @@ const MyProperties = () => {
                   {myBuildings.map((building) => (
                     <BuildingItem
                       building={building}
-                      id={building._id} // Use _id as unique key
+                      id={building._id}
                       key={building._id}
                     />
                   ))}

@@ -12,6 +12,7 @@ import buildingRoutes from './routes/buildingRoutes.js';
 import uploadRoutes from './routes/uploadRoutes.js';
 import otpRoutes from './routes/otpRoutes.js';
 import chatRoutes from './routes/chatRoutes.js';
+import paymentRoutes from "./routes/paymentRoutes.js";
 import { errorHandler, notFound } from './middleware/errorMiddleware.js';
 import Chat from './models/chat.js';
 
@@ -40,6 +41,8 @@ app.use('/buildings', buildingRoutes);
 app.use('/users', userRoutes);
 app.use('/chats', chatRoutes);
 app.use('/upload', uploadRoutes);
+
+app.use("/payments", paymentRoutes);
 
 const __dirname = path.resolve();
 app.use('/uploads', express.static(path.join(__dirname, '/uploads')));

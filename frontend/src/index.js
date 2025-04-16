@@ -21,13 +21,15 @@ import CreateBuilding from './pages/CreateBuilding';
 import BuildingDetails  from './pages/BuildingDetails';
 import MyProperties from './pages/MyProperties';
 import OtpInput from './components/OtpInput';
-
+import Success from './pages/Success';
+import EditBuilding from './pages/EditBuilding';
 import './index.css';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import MyFavorites from './pages/MyFavorites';
 import EditProfile from './pages/EditProfile';
 import Cart from './pages/Cart';
 import Chats from './pages/Chats';
+import Payment from './pages/Payment';
 
 const router = createBrowserRouter(
   createRoutesFromElements(
@@ -40,19 +42,20 @@ const router = createBrowserRouter(
       <Route path="/register/otp" element={<OtpInput />} />
       <Route path="/building-details/:id" element={<BuildingDetails />} />
 
-
       <Route element={<PrivateRoute />}>
         <Route path="/profile/:id" element={<Profile />} />
         <Route path="/cart" element={<Cart />} />
-        <Route path='/profile/chats' element={<Chats/>}/>
+        <Route path="/profile/chats" element={<Chats />} />
         <Route path="/profile/create-building" element={<CreateBuilding />} />
         <Route path="/profile/properties" element={<MyProperties />} />
         <Route path="/profile/favorites" element={<MyFavorites />} />
         <Route path="/profile/edit" element={<EditProfile />} />
+        <Route path="/profile/edit-building/:id" element={<EditBuilding />} />
+        <Route path="/payment" element={<Payment />} />
+        <Route path="/success" element={<Success />} />
       </Route>
 
-      <Route element={<AdminRoute />}>
-      </Route>
+      <Route element={<AdminRoute />}></Route>
     </Route>
   )
 );

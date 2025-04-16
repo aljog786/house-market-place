@@ -1,39 +1,45 @@
-import { memo } from 'react';
-import { Link,useNavigate } from "react-router-dom";
-import { useSelector } from 'react-redux';
+import { memo } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { useSelector } from "react-redux";
 import { Card, Row, Col, Badge, Button } from "react-bootstrap";
 import { FaBed, FaBath } from "react-icons/fa";
 import { RiMoneyRupeeCircleFill } from "react-icons/ri";
-import WishlistButton from './WishlistButton';
-import { useAddToCartMutation } from '../slices/usersApiSlice';
-import './BuildingItem.css';
+import WishlistButton from "./WishlistButton";
+import { useDeleteBuildingMutation } from "../slices/buildingsApiSlice";
+import "./BuildingItem.css";
 
 const BuildingItem = memo(({ building, id }) => {
-const navigate = useNavigate();
-  const { 
-    imageUrls, 
-    address, 
-    name, 
-    offer, 
-    discountedPrice, 
-    regularPrice, 
-    type, 
-    rooms, 
-    toilets 
+  const navigate = useNavigate();
+
+  const {
+    imageUrls,
+    address,
+    name,
+    offer,
+    discountedPrice,
+    regularPrice,
+    type,
+    rooms,
+    toilets,
+    userRef
   } = building;
 
-  const userId = useSelector((state) => state.auth.userInfo?._id);
-  const [addToCart] = useAddToCartMutation();
-  const handleBuyNow = async () => {
-    if (!userId) {
-      console.error('User not logged in');
-      return;
-    }
-    try {
-      await addToCart({ userId, buildingId: id }).unwrap();
-      navigate('/cart');
-    } catch (error) {
-      console.error('Failed to add to cart', error);
+  const currentUserId = useSelector((state) => state.auth.userInfo?._id);
+
+  const [deleteBuilding, { isLoading: isDeleting }] =
+    useDeleteBuildingMutation();
+
+  const handleEdit = () => {
+    navigate(`/profile/edit-building/${id}`);
+  };
+
+  const handleDelete = async () => {
+    if (window.confirm("Are you sure you want to delete this property?")) {
+      try {
+        await deleteBuilding(id).unwrap();
+      } catch (error) {
+        console.error("Failed to delete property", error);
+      }
     }
   };
 
@@ -56,13 +62,22 @@ const navigate = useNavigate();
           <div className="mb-2">
             {offer && (
               <Badge pill bg="danger" className="mb-2">
-                {Math.round(((regularPrice - discountedPrice) / regularPrice) * 100)}% Off
+                {Math.round(
+                  ((regularPrice - discountedPrice) / regularPrice) * 100
+                )}
+                % Off
               </Badge>
             )}
-            <Card.Title className="fs-6 fw-bold text-dark truncate-2-lines" title={name}>
+            <Card.Title
+              className="fs-6 fw-bold text-dark truncate-2-lines"
+              title={name}
+            >
               {name}
             </Card.Title>
-            <Card.Text className="text-muted small truncate-1-line" title={address}>
+            <Card.Text
+              className="text-muted small truncate-1-line"
+              title={address}
+            >
               {address}
             </Card.Text>
           </div>
@@ -73,34 +88,46 @@ const navigate = useNavigate();
                 {(offer ? discountedPrice : regularPrice).toLocaleString()}
               </span>
               {offer && (
-                <del className="small text-muted">₹{regularPrice.toLocaleString()}</del>
+                <del className="small text-muted">
+                  ₹{regularPrice.toLocaleString()}
+                </del>
               )}
               <span className="small text-muted ms-auto">
-                {type === 'rent' ? '/month' : ''}
+                {type === "rent" ? "/month" : ""}
               </span>
             </div>
             <hr className="my-2" />
             <Row className="g-2 text-center small">
               <Col>
                 <div className="d-flex align-items-center justify-content-center gap-1">
-                  <FaBed className="text-primary" />
-                  {rooms} Beds
+                  <FaBed className="text-primary" /> {rooms} Beds
                 </div>
               </Col>
               <Col>
                 <div className="d-flex align-items-center justify-content-center gap-1">
-                  <FaBath className="text-info" />
-                  {toilets} Baths
+                  <FaBath className="text-info" /> {toilets} Baths
                 </div>
               </Col>
             </Row>
-            <Button 
-              variant="primary" 
-              className="mt-3 w-100 fw-bold"
-              onClick={handleBuyNow}
-            >
-              Buy Now
-            </Button>
+            {currentUserId === userRef?._id && (
+              <>
+                <Button
+                  variant="secondary"
+                  className="mt-3 w-100 fw-bold"
+                  onClick={handleEdit}
+                >
+                  Edit
+                </Button>
+                <Button
+                  variant="danger"
+                  className="mt-2 w-100 fw-bold"
+                  onClick={handleDelete}
+                  disabled={isDeleting}
+                >
+                  {isDeleting ? "Deleting..." : "Delete"}
+                </Button>
+              </>
+            )}
           </div>
         </Card.Body>
       </Card>

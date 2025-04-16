@@ -51,9 +51,7 @@ const BuildingDetails = () => {
         ownerId: userIdForQuery,
       }).unwrap();
       navigate('/profile/chats', {
-        state: {
-          chat
-        },
+        state: { chat }
       });
     } catch (err) {
       console.error('Error creating/fetching chat:', err);
@@ -63,9 +61,7 @@ const BuildingDetails = () => {
   if (isLoading) {
     return (
       <Container className="text-center mt-5">
-        <Spinner animation="border" role="status">
-          <span className="visually-hidden">Loading...</span>
-        </Spinner>
+        <Spinner animation="border" role="status" />
       </Container>
     );
   }
