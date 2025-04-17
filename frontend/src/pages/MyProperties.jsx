@@ -1,13 +1,19 @@
+// frontend/src/pages/MyProperties.jsx
+import React from "react";
 import { useSelector } from "react-redux";
 import { Row, Container, Spinner, Card, Col, Button } from "react-bootstrap";
-import BuildingItem from "../components/BuildingItem";
 import { useNavigate } from "react-router-dom";
-import { useGetBuildingsQuery } from "../slices/buildingsApiSlice";
+import BuildingItem from "../components/BuildingItem";
+import {
+  useGetBuildingsQuery,
+  useDeleteBuildingMutation,
+} from "../slices/buildingsApiSlice";
 
 const MyProperties = () => {
   const { userInfo } = useSelector((state) => state.auth);
   const navigate = useNavigate();
 
+  // fetch all buildings
   const {
     data: buildingsData = [],
     isLoading,
@@ -15,11 +21,28 @@ const MyProperties = () => {
     error,
   } = useGetBuildingsQuery();
 
+  // only this user's listings
   const myBuildings = userInfo
-    ? buildingsData.filter(
-        (building) => building.userRef && building.userRef._id === userInfo._id
-      )
+    ? buildingsData.filter((b) => b.userRef && b.userRef._id === userInfo._id)
     : [];
+
+  // delete mutation
+  const [deleteBuilding, { isLoading: isDeleting }] =
+    useDeleteBuildingMutation();
+
+  const handleEdit = (id) => {
+    navigate(`/profile/edit-building/${id}`);
+  };
+
+  const handleDelete = async (id) => {
+    if (window.confirm("Are you sure you want to delete this property?")) {
+      try {
+        await deleteBuilding(id).unwrap();
+      } catch (err) {
+        console.error("Failed to delete property:", err);
+      }
+    }
+  };
 
   const handleAddProperty = () => {
     navigate("/profile/create-building");
@@ -49,11 +72,15 @@ const MyProperties = () => {
                 </p>
               ) : myBuildings.length > 0 ? (
                 <Row>
-                  {myBuildings.map((building) => (
+                  {myBuildings.map((b) => (
                     <BuildingItem
-                      building={building}
-                      id={building._id}
-                      key={building._id}
+                      key={b._id}
+                      id={b._id}
+                      building={b}
+                      showActions={true}
+                      onEdit={handleEdit}
+                      onDelete={handleDelete}
+                      isDeleting={isDeleting}
                     />
                   ))}
                 </Row>
